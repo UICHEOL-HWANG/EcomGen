@@ -19,7 +19,6 @@ def generate_description(model, tokenizer, product_name, max_length=512):
 
     # ✅ 훈련된 데이터 패턴에 맞춘 프롬프트
     prompt = f"상품명: {product_name}\n상품 설명: "
-
     # ✅ 토큰화 및 입력값 변환
     inputs = tokenizer(prompt, return_tensors="pt")
     inputs.pop("token_type_ids", None)

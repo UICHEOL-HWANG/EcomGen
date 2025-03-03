@@ -5,6 +5,7 @@ __pycache__/
 
 ollama/Exaone-gguf/EXAONE-3.5-2.4B-Instruct-Q4_K_M.gguf
 
+
 # C extensions
 *.so
 
@@ -26,9 +27,15 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+<<<<<<< HEAD
 MANIFESTw
 
 ollama/Llama-gguf/Llama-3-Open-Ko-8B-Q4_0.gguf
+=======
+MANIFEST
+
+ollama/Llama-3-Open-Ko-8B-Q4_0.gguf
+>>>>>>> origin/main
 model/Polyglot-ko-1.3b/results
 model/Polyglot-ko-1.3b/merged_polyglot
 
@@ -40,9 +47,6 @@ model/data/train.csv
 
 model/KoGPT2-v1/output_dir
 model/KoGPT2-v1/results
-
-model/Polyglot-ko-1.3b/renew_merged_polyglot
-
 
 model/solar-v1/output_dir
 model/solar-v1/results
@@ -190,4 +194,4 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-ollama/Exaone-gguf/EXAONE-3.5-2.4B-Instruct-Q4_K_M.gguf
+
