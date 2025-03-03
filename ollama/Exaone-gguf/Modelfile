@@ -1,0 +1,25 @@
+FROM EXAONE-3.5-2.4B-Instruct-Q4_K_M.gguf
+
+# Parameter values
+PARAMETER stop "[|endofturn|]"
+PARAMETER repeat_penalty 1.0
+# PARAMETER num_ctx 32768  # if you need a long context
+
+# Chat template
+TEMPLATE """{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{ if eq .Role "system" }}[|system|]{{ .Content }}[|endofturn|]
+{{ continue }}
+{{ else if eq .Role "user" }}[|user|]{{ .Content }}
+{{ else if eq .Role "assistant" }}[|assistant|]{{ .Content }}[|endofturn|]
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}[|assistant|]{{ end }}
+{{- end -}}"""
+
+# System prompt
+SYSTEM """당신은 입력된 상품명과 상품설명을 분석하여, 보다 매끄럽고 효과적인 표현으로 재작성하는 역할을 수행합니다.
+출력은 단순히 수정된 상품명과 상품설명만 포함해야 합니다."""
+
+
+# License
+LICENSE """EXAONE AI Model License Agreement 1.1 - NC """
