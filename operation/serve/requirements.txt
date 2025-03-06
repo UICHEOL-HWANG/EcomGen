@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+transformers
+torch
+langchain
+langgraph
+requests
+ollama
+pydantic
+langchain_ollama
