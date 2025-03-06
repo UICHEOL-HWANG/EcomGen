@@ -50,9 +50,11 @@ Action2.
 # LLM과의 결합 
 
 - `Polyglot-1.3b`과 `LG Exaone-3.5`의 결합으로 조금 더 매끄러우면서 창의적인 멘트 완성 
-
+    
   
-- 기존 `Polyglot-1.3b` 출력내용 
+- 기존 `Polyglot-1.3b` 
+
+- 출력내용 
 ``` text
 상품명: 저당 초코바
 
