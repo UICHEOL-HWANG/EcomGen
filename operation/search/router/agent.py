@@ -13,6 +13,7 @@ user_proxy = UserProxyAgent(
     code_execution_config={
         "use_docker": False,
     }
+
 )
 
 # 리서처 정의 (호출자 역할)
