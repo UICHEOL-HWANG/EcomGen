@@ -57,6 +57,9 @@ class Agent:
             is_termination_msg=lambda msg: "최종 보고서 작성이 완료되었습니다." in msg.get("content", ""),
         )
 
+    def __call__(self, query: str):
+        return self.run(query)
+
     def run(self, query: str):
         chat = self.user_proxy.initiate_chat(
             self.manager,

@@ -1,5 +1,5 @@
 from .agent import Agent
-from dto.search import SearchRequests
+from dto.search import SearchResponse, SearchRequests
 from fastapi import APIRouter
 
 search_router = APIRouter(
@@ -10,8 +10,8 @@ search_router = APIRouter(
 
 auto_gen = Agent()
 
-@search_router.post("/")
+@search_router.post("/", response_model=SearchResponse)
 async def search_content(request: SearchRequests):
     query = request.query
-    result = auto_gen.run(query)
-    return {"query": query, "result": result}
+    result = auto_gen(query)
+    return SearchResponse(query=query, result=result)
