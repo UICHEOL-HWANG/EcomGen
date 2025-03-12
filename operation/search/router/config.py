@@ -1,11 +1,8 @@
 import os
-from dotenv import load_dotenv
 
-# .env 파일 로드
-load_dotenv()
 
 # Tavily API 키
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "default_api_key")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "apis")
 
 # Ollama 모델 설정
 OLLAMA_QWEN_CONFIG = {

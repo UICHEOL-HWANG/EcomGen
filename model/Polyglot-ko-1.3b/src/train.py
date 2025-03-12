@@ -62,7 +62,7 @@ class Train:
             per_device_eval_batch_size=vali_batch,
             save_steps=500,  # 🔹 500 스텝마다 체크포인트 저장
             save_total_limit=3,
-            gradient_accumulation_steps=8,  # ✅ VRAM 최적화 (RTX 4070 환경 고려)
+            gradient_accumulation_steps=8,  # ✅ VRAM 최적화 (RTX 4060 환경 고려)
             logging_steps=100,
             evaluation_strategy="steps",  # ✅ `eval_strategy` → `evaluation_strategy`
             learning_rate=learning_rate,
