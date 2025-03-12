@@ -17,4 +17,3 @@ OLLAMA_ECOMGEN_CONFIG = {
     "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 }
 
-# 기타 설정 필요시 추가 가능
