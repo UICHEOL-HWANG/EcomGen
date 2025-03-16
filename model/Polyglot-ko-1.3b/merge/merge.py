@@ -3,7 +3,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
 def merge_adapter():
-    # 1. 베이스 모델 및 토크나이저 로드
+    # 1. 베이스 모델 및 토크나이저 로드w
     model_name = "EleutherAI/polyglot-ko-1.3b"
     model = AutoModelForCausalLM.from_pretrained(model_name)
 
