@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'account',
     'rest_framework',
-    'authorization',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_yasg'
 ]
 
@@ -138,11 +138,10 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.test.backends.ModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
