@@ -3,7 +3,7 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
 # Modules
-from router.search_router import search_router
+from search.agent.search_router import search_router
 
 app = FastAPI()
 

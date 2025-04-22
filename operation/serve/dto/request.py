@@ -1,4 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class GenerateRequest(BaseModel):
-    product_name : str
+class QueryRequest(BaseModel):
+    request_id: str
+    query: str
+    n: int = Field(default=1)
+    top_p: float = Field(default=0.7)
+    temperature: float = Field(default=0.0)
+    max_tokens: int = Field(default=1024)
+    seed: int = Field(default=42)

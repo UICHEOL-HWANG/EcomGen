@@ -1,17 +1,26 @@
-FROM python:3.9-slim-buster
+FROM python:3.10-slim
 
-WORKDIR /generate
+ENV VLLM_TARGET_DEVICE=cpu
 
+RUN apt-get update && \
+    apt-get install -y git gcc-12 g++-12 libnuma-dev curl && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 10 \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-12
 
-COPY . .
+RUN pip install --upgrade pip && \
+    pip install wheel packaging ninja "setuptools>=49.4.0" numpy
 
-# ✅ 필요한 패키지 미리 설치 (시스템 패키지 포함)
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# vLLM 소스 클론
+RUN git clone https://github.com/vllm-project/vllm.git /vllm
+WORKDIR /vllm
 
-RUN pip install --no-cache-dir -r requirements.txt
+# CPU용 의존성 설치
+RUN pip install -r requirements-cpu.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
+# 직접 설치
+RUN python setup.py install
 
+# 앱 복사 후 실행
+WORKDIR /app
+COPY . /app
 CMD ["python", "main.py"]

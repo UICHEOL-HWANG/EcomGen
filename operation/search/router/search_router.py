@@ -1,5 +1,6 @@
-from .agent import Agent
+from operation.search.agent.initialized_model import Agent
 from dto.search import SearchResponse, SearchRequests
+from agent.
 from fastapi import APIRouter
 
 search_router = APIRouter(

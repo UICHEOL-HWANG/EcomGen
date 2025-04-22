@@ -10,7 +10,7 @@ model/kanana-nano-2.1b-instruct/kanana_lora_finetuned
 model/kanana-nano-2.1b-instruct/save_kanana
 model/kanana-nano-2.1b-instruct/merge_kanana
 
-
+.env
 
 # C extensions
 *.so

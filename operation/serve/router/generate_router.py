@@ -1,31 +1,37 @@
-from fastapi import APIRouter
-from .generate_model import generate_description, create_description_pipeline
-from .clean_text import clean_text
-from dto.request import GenerateRequest
+from fastapi import APIRouter, Request
+from vllm import SamplingParams
+from dto.request import QueryRequest
 
-generate_router = APIRouter(
-    prefix="/generate",
-    tags=["Generate"],
-    responses={404: {"description": "Not found"}},
-)
-
+generate_router = APIRouter(prefix="/generate", tags=["Generate"])
 
 @generate_router.post("/", response_model=dict)
-async def generate_and_clean_description(request: GenerateRequest):
-    product_name = request.product_name
+async def generate_and_clean_description(request: Request, payload: QueryRequest):
+    product_name = payload.product_name
+    llm = request.app.state.llm
 
-    # 1. ✅ 생성 파이프라인 로드
-    pipe = create_description_pipeline("UICHEOL-HWANG/EcomGen-0.0.1v")
 
-    # 2. ✅ 상품 설명 생성
-    raw_description = generate_description(pipe, product_name)
+    prompt = f"상품명: {product_name}"
 
-    # 3. ✅ 생성된 설명 다듬기
-    cleaned_description = clean_text(raw_description)
+    sampling_params = SamplingParams(
+        temperature=1.0,
+        top_p=0.9,
+        top_k=40,
+        repetition_penalty=1.15,
+        max_tokens=512,
+        seed=42
+    )
 
-    # 4. ✅ 결과 반환
+    request_id = f"gen-{product_name[:10]}"
+    results_generator = llm.generate(prompt=prompt, sampling_params=sampling_params, request_id=request_id)
+
+    raw_description = ""
+    async for output in results_generator:
+        raw_description = output.outputs[0].text
+        if output.finished:
+            break
+
     return {
         "product_name": product_name,
         "generated_description": raw_description,
-        "cleaned_description": cleaned_description
     }
+

@@ -4,6 +4,5 @@ transformers
 torch
 langchain
 requests
-ollama
 pydantic
-langchain_ollama
+vllm

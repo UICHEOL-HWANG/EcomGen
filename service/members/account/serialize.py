@@ -21,3 +21,20 @@ class SignupSerializer(serializers.ModelSerializer):
             intro=validated_data.get('intro', '')
         )
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'profile_pic', 'intro')
+        # email은 수정 가능하도록 하거나, read_only_fields로 지정할 수 있습니다.
+        # read_only_fields = ('email',)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("현재 비밀번호가 올바르지 않습니다.")
+        return value

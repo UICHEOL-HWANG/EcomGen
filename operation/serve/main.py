@@ -4,6 +4,7 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
 from router.generate_router import generate_router
+from router.generate_model import create_async_llm_engine
 
 app = FastAPI()
 
@@ -15,6 +16,10 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Custom-Header"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.llm = create_async_llm_engine("UICHEOL-HWANG/EcomGen-0.0.1v")
 
 app.include_router(generate_router)
 

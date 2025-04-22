@@ -1,27 +1,21 @@
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from vllm import AsyncEngineArgs, AsyncLLMEngine, SamplingParams
 
-def create_description_pipeline(model_path):
-    """ ✅ 상품 설명 생성을 위한 파이프라인 생성 """
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    model = AutoModelForCausalLM.from_pretrained(model_path)
+import torch
 
-    # 파이프라인 생성
-    description_pipeline = pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-        repetition_penalty=1.15,
-        temperature=1.0,
-        top_p=0.9,
-        top_k=40,
-        do_sample=True
+def create_async_llm_engine(
+    model_path: str,
+    gpu_util: float = 0.95,
+    tp_size: int = 1,
+    force_cpu: bool = False
+) -> AsyncLLMEngine:
+    is_cpu = force_cpu or not torch.cuda.is_available()
+    dtype = "float32" if is_cpu else "float16"
+
+    engine_args = AsyncEngineArgs(
+        model=model_path,
+        gpu_memory_utilization=gpu_util if not is_cpu else 0,
+        tensor_parallel_size=tp_size if not is_cpu else 1,
+        dtype=dtype,
     )
+    return AsyncLLMEngine.from_engine_args(engine_args)
 
-    return description_pipeline
-
-def generate_description(pipeline, product_name):
-    """ ✅ 파이프라인을 사용하여 상품 설명 생성 """
-    prompt = f"상품명: {product_name}\n상품 설명: "
-    result = pipeline(prompt, max_new_tokens=512)  # max_length 대신 max_new_tokens 사용
-    print(result)
-    return result[0]['generated_text']
