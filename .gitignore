@@ -3,15 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-ollama/Exaone-gguf/EXAONE-3.5-2.4B-Instruct-Q4_K_M.gguf
-
-
-model/kanana-nano-2.1b-instruct/kanana_lora_finetuned
-model/kanana-nano-2.1b-instruct/save_kanana
-model/kanana-nano-2.1b-instruct/merge_kanana
-
-
-
 # C extensions
 *.so
 
