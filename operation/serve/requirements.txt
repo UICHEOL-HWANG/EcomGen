@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-transformers
-torch
-langchain
-requests
-ollama
-pydantic
-langchain_ollama

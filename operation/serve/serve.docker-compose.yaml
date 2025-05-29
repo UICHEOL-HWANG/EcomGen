@@ -1,8 +1,0 @@
-services:
-  generate:
-    container_name: serving
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
