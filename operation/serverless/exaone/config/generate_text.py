@@ -30,6 +30,7 @@ def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
         )
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         logging.info("모델 로드 완료")
+
     except Exception as e:
         logging.error(f"모델 로드 중 오류 발생: {e}")
         raise

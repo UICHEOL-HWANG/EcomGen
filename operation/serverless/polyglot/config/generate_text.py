@@ -20,7 +20,7 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
     """
     logging.info(f"모델 로드 중: {model_path}")
 
-    # 올바른 from_pretrained 메서드 사용
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -50,7 +50,6 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
         "pad_token_id": tokenizer.eos_token_id  # 패딩 토큰 ID 설정
     }
 
-    # 사용자 제공 파라미터로 기본값 덮어쓰기
     generation_params.update(kwargs)
     logging.info(f"생성 파라미터: {generation_params}")
 
