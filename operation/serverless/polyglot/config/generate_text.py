@@ -21,7 +21,8 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
     logging.info(f"모델 로드 중: {model_path}")
 
     # 올바른 from_pretrained 메서드 사용
-    model = AutoModelForCausalLM.from_pretrained(model_path)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     # 패딩 토큰 확인
@@ -30,7 +31,6 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
 
     # GPU 사용 가능 시 모델 이동
     if torch.cuda.is_available():
-        model = model.to("cuda")
         logging.info(f"모델이 GPU로 이동되었습니다: {model.device}")
     else:
         logging.info("GPU를 사용할 수 없어 CPU에서 실행됩니다")
@@ -55,11 +55,7 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
     logging.info(f"생성 파라미터: {generation_params}")
 
     # 입력 토큰화
-    inputs = tokenizer(prompt, return_tensors="pt")
-
-    # GPU 사용 시 입력 텐서 이동
-    if torch.cuda.is_available():
-        inputs = {k: v.to("cuda") for k, v in inputs.items()}
+    inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
     # 텍스트 생성
     logging.info("텍스트 생성 중...")

@@ -1,6 +1,7 @@
 import logging
 import traceback
 from config.generate_text import generate_description
+import runpod
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -88,3 +89,6 @@ def handler(event):
             "error": str(e),
             "traceback": traceback.format_exc()
         }
+
+if __name__ == "__main__":
+    runpod.serverless.start({"handler" : handler})

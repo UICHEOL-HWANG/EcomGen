@@ -63,3 +63,5 @@ def handler(event):
             "traceback": traceback.format_exc()
         }
 
+if __name__ == "__main__":
+    runpod.serverless.start({"handler" : handler})

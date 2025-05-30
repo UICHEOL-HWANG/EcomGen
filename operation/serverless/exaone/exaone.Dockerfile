@@ -1,5 +1,4 @@
-FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
-
+FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 # 기본 패키지
 RUN apt-get update && apt-get install -y \
     git wget \
@@ -11,7 +10,6 @@ RUN pip install --no-cache-dir \
     transformers \
     accelerate \
     requests \
-    huggingface-hub \
     runpod
 
 COPY . . /app/

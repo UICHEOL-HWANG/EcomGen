@@ -55,7 +55,7 @@ def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
         # 기본 생성 파라미터
         generation_params = {
             "eos_token_id": tokenizer.eos_token_id,
-            "max_new_tokens": 128,
+            "max_new_tokens": 512,
             "do_sample": False,
         }
 
