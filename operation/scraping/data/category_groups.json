@@ -1,0 +1,1003 @@
+[
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907009",
+    "sub_name": "더퍼플셀렉션 채소",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907008",
+    "sub_name": "친환경",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907001",
+    "sub_name": "고구마·감자·당근",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907002",
+    "sub_name": "시금치·쌈채소·나물",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907003",
+    "sub_name": "브로콜리·파프리카·양배추",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907005",
+    "sub_name": "양파·대파·마늘·배추",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907004",
+    "sub_name": "오이·호박·고추",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907007",
+    "sub_name": "냉동·이색·간편채소",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "907",
+    "main_name": "채소",
+    "sub_code": "907006",
+    "sub_name": "콩나물·버섯",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908009",
+    "sub_name": "더퍼플셀렉션 과일·견과·쌀",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908008",
+    "sub_name": "친환경",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908006",
+    "sub_name": "제철과일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908001",
+    "sub_name": "국산과일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908002",
+    "sub_name": "수입과일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908007",
+    "sub_name": "간편과일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908003",
+    "sub_name": "냉동·건과일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908004",
+    "sub_name": "견과류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "908",
+    "main_name": "과일·견과·쌀",
+    "sub_code": "908005",
+    "sub_name": "쌀·잡곡",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909017",
+    "sub_name": "더퍼플셀렉션 수산",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909010",
+    "sub_name": "제철수산",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909001",
+    "sub_name": "생선류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909009",
+    "sub_name": "굴비·반건류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909011",
+    "sub_name": "연어·참치",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909012",
+    "sub_name": "회·탕류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909002",
+    "sub_name": "오징어·낙지·문어",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909004",
+    "sub_name": "해산물·전복·조개류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909003",
+    "sub_name": "새우·게·랍스터",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909007",
+    "sub_name": "수산가공품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909013",
+    "sub_name": "명란",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909014",
+    "sub_name": "젓갈·장류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909015",
+    "sub_name": "간편구이",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909005",
+    "sub_name": "김·미역·해조류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909006",
+    "sub_name": "멸치·황태·다시팩",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "909",
+    "main_name": "수산·해산·건어물",
+    "sub_code": "909016",
+    "sub_name": "조미오징어·어포·쥐포",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910013",
+    "sub_name": "더퍼플셀렉션 정육",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910001",
+    "sub_name": "국내산 소고기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910007",
+    "sub_name": "수입산 소고기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910002",
+    "sub_name": "국내산 돼지고기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910009",
+    "sub_name": "수입산 돼지고기·양고기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910004",
+    "sub_name": "닭·오리고기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910010",
+    "sub_name": "식단관리용 가공육",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910003",
+    "sub_name": "양념육",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910011",
+    "sub_name": "돈까스·떡갈비·함박",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910012",
+    "sub_name": "소시지·베이컨·하몽",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "910",
+    "main_name": "정육·가공육·달걀",
+    "sub_code": "910005",
+    "sub_name": "달걀·가공란",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "911",
+    "main_name": "국·반찬·메인요리",
+    "sub_code": "911001",
+    "sub_name": "국·탕·찌개",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "911",
+    "main_name": "국·반찬·메인요리",
+    "sub_code": "911002",
+    "sub_name": "밑반찬",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "911",
+    "main_name": "국·반찬·메인요리",
+    "sub_code": "911003",
+    "sub_name": "김치·젓갈·장류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "911",
+    "main_name": "국·반찬·메인요리",
+    "sub_code": "911005",
+    "sub_name": "두부·어묵·부침개",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "911",
+    "main_name": "국·반찬·메인요리",
+    "sub_code": "911006",
+    "sub_name": "메인요리",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912011",
+    "sub_name": "밀키트",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912001",
+    "sub_name": "샐러드·샌드위치",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912002",
+    "sub_name": "선식·시리얼",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912003",
+    "sub_name": "도시락·밥류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912004",
+    "sub_name": "짜장·짬뽕·파스타·면류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912005",
+    "sub_name": "떡볶이·튀김·순대",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "912",
+    "main_name": "간편식·밀키트·샐러드",
+    "sub_code": "912008",
+    "sub_name": "치킨·피자·핫도그·만두",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913009",
+    "sub_name": "라면",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913001",
+    "sub_name": "파스타·면류·조리용 떡",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913002",
+    "sub_name": "밀가루·가루·믹스",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913010",
+    "sub_name": "햄·통조림·병조림",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913011",
+    "sub_name": "죽·스프·카레",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913003",
+    "sub_name": "양념·액젓·장류",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913006",
+    "sub_name": "식용유·참기름·오일",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913007",
+    "sub_name": "식초·소스·드레싱",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "913",
+    "main_name": "면·양념·오일",
+    "sub_code": "913008",
+    "sub_name": "소금·설탕·향신료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914001",
+    "sub_name": "생수/얼음",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914002",
+    "sub_name": "탄산수",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914003",
+    "sub_name": "탄산·스포츠음료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914004",
+    "sub_name": "과일·야채음료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914005",
+    "sub_name": "차음료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "914",
+    "main_name": "생수·음료",
+    "sub_code": "914006",
+    "sub_name": "어린이음료·선물세트",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383001",
+    "sub_name": "스페셜티 원두",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383002",
+    "sub_name": "홀빈·분쇄 원두",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383003",
+    "sub_name": "드립백·커피백",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383004",
+    "sub_name": "캡슐커피",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383005",
+    "sub_name": "인스턴트커피·커피믹스",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383006",
+    "sub_name": "콜드브루·커피음료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383007",
+    "sub_name": "녹차·보리차·홍차",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383008",
+    "sub_name": "액상차·청·코코아·밀크티",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383009",
+    "sub_name": "커피·차 선물세트",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383010",
+    "sub_name": "커피머신",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "383",
+    "main_name": "커피·차",
+    "sub_code": "383011",
+    "sub_name": "커피용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "249",
+    "main_name": "간식·과자·떡",
+    "sub_code": "249005",
+    "sub_name": "과자·간식",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "249",
+    "main_name": "간식·과자·떡",
+    "sub_code": "249006",
+    "sub_name": "쿠키·비스킷·크래커",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "249",
+    "main_name": "간식·과자·떡",
+    "sub_code": "249002",
+    "sub_name": "초콜릿·젤리·캔디",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "249",
+    "main_name": "간식·과자·떡",
+    "sub_code": "249003",
+    "sub_name": "떡·한과",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915014",
+    "sub_name": "[이 주의 추천 베이커리]",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915011",
+    "sub_name": "식빵·모닝빵·베이글",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915007",
+    "sub_name": "간식빵",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915008",
+    "sub_name": "타르트·파이",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915009",
+    "sub_name": "디저트",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915012",
+    "sub_name": "케이크",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "915",
+    "main_name": "베이커리",
+    "sub_code": "915010",
+    "sub_name": "잼·스프레드",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018001",
+    "sub_name": "우유·두유",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018002",
+    "sub_name": "요거트·생크림",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018003",
+    "sub_name": "자연치즈",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018004",
+    "sub_name": "가공치즈",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018005",
+    "sub_name": "버터",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "018",
+    "main_name": "유제품",
+    "sub_code": "018006",
+    "sub_name": "아이스크림",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032009",
+    "sub_name": "비타민·미네랄",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032001",
+    "sub_name": "건강즙·건강음료",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032002",
+    "sub_name": "홍삼·인삼",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032010",
+    "sub_name": "꿀·과일청",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032003",
+    "sub_name": "영양제",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032004",
+    "sub_name": "유산균",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032005",
+    "sub_name": "건강분말·건강환",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032011",
+    "sub_name": "체중관리",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032012",
+    "sub_name": "프로틴",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032014",
+    "sub_name": "이너뷰티",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "032",
+    "main_name": "건강식품",
+    "sub_code": "032007",
+    "sub_name": "유아동, 키즈",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916006",
+    "sub_name": "일회용품·주방잡화",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916007",
+    "sub_name": "주방·조리도구",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916008",
+    "sub_name": "냄비·팬·솥",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916009",
+    "sub_name": "식기·그릇",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916010",
+    "sub_name": "컵·잔·물병",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916012",
+    "sub_name": "밀폐·보관·저장용기",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916014",
+    "sub_name": "커트러리",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916013",
+    "sub_name": "주방수납정리",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "916",
+    "main_name": "주방용품",
+    "sub_code": "916011",
+    "sub_name": "보관용기·텀블러",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918007",
+    "sub_name": "화장지·물티슈",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918018",
+    "sub_name": "세제",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918019",
+    "sub_name": "탈취·제습·방충제",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918020",
+    "sub_name": "청소용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918021",
+    "sub_name": "욕실용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918022",
+    "sub_name": "세탁용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918023",
+    "sub_name": "수납정리용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918010",
+    "sub_name": "의약외품·마스크",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918016",
+    "sub_name": "여성·위생용품",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "918",
+    "main_name": "생활용품·리빙",
+    "sub_code": "918011",
+    "sub_name": "취미·문구·오피스",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "085",
+    "main_name": "가전제품",
+    "sub_code": "085002",
+    "sub_name": "주방가전",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "085",
+    "main_name": "가전제품",
+    "sub_code": "085001",
+    "sub_name": "생활가전",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "085",
+    "main_name": "가전제품",
+    "sub_code": "085003",
+    "sub_name": "계절가전",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "085",
+    "main_name": "가전제품",
+    "sub_code": "085004",
+    "sub_name": "디지털·PC",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019013",
+    "sub_name": "테이블·식탁·책상",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019014",
+    "sub_name": "소파·의자",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019015",
+    "sub_name": "서랍·선반·진열장",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019016",
+    "sub_name": "행거·옷장",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019017",
+    "sub_name": "침대·매트리스·토퍼",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019018",
+    "sub_name": "화장대·콘솔",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019019",
+    "sub_name": "홈데코·조명·거울",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019020",
+    "sub_name": "홈패브릭",
+    "kind": "product_category"
+  },
+  {
+    "main_code": "019",
+    "main_name": "가구·인테리어",
+    "sub_code": "019021",
+    "sub_name": "이불·베개·패드",
+    "kind": "product_category"
+  }
+]
