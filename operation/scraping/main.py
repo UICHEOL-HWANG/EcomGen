@@ -1,6 +1,6 @@
 from config.crawl import Crawl, ListCrawl
 from config.set_conifgs import headers, cookies, params
-from config.category_code import code
+from config.category_code import all_categories
 
 from storage.storage import Storage
 
@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 import requests
 from lxml import html
+
+import random
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,73 +46,18 @@ def main():
     # 현재 날짜 가져오기 (파일명에 사용)
     today = datetime.now().strftime("%Y%m%d")
 
-    # 각 카테고리에 대한 데이터 수집
-    for codes in tqdm(code, desc="카테고리 데이터 수집"):
-        try:
-            # 카테고리 데이터 가져오기
-            data = crawl.fetch_data(url=os.getenv("API_CONNECT_URL"), category=f'{codes}')
-
-            if data:
-                # 카테고리 데이터 저장
-                category_data[codes] = data
-
-                # 데이터 추가
-                for categories in data:
-                    category_lst.append(categories)
-
-                # 로깅 - 첫 번째 항목 샘플 출력
-                if data:
-                    logging.info(f'현재 {codes} 데이터 추출중 {data[0]} 확인')
-                else:
-                    logging.warning(f'카테고리 {codes}에 대한 데이터가 비어 있습니다')
-            else:
-                logging.warning(f'카테고리 {codes}에 대한 데이터를 가져오지 못했습니다')
-
-            # 과도한 요청 방지를 위한 대기
-            time.sleep(5)
-
-        except Exception as e:
-            logging.error(f'카테고리 {codes} 처리 중 오류 발생: {e}')
-
-    # 카테고리 데이터 수집 결과 로깅
-    logging.info(f'총 {len(category_lst)}개의 카테고리 코드를 수집했습니다')
-
-    # 카테고리 데이터를 S3에 저장
-    try:
-        # 카테고리 코드 목록 저장
-        category_codes_data = {
-            "collection_date": today,
-            "categories": category_lst,
-            "total_count": len(category_lst)
-        }
-
-        storage.uploads_data(
-            data=category_codes_data,
-            object_key=f"ecomgen/categories/category_codes_{today}.json"
-        )
-        logging.info(f"카테고리 코드 목록을 S3에 저장했습니다")
-
-        # 카테고리별 상세 데이터 저장
-        storage.uploads_data(
-            data=category_data,
-            object_key=f"ecomgen/categories/category_details_{today}.json"
-        )
-        logging.info(f"카테고리 상세 데이터를 S3에 저장했습니다")
-    except Exception as e:
-        logging.error(f"카테고리 데이터 S3 저장 중 오류 발생: {e}")
-
     # ListCrawl 인스턴스 생성
     lstcrawl = ListCrawl(header=headers, cookie=cookies, params=params)
 
     # 각 카테고리에 대한 상품 정보 수집
-    for category in tqdm(category_lst, desc="상품 데이터 수집"):
+    for category in tqdm(all_categories, desc="상품 데이터 수집"):
         category_products = []  # 현재 카테고리의 상품 목록
 
         try:
             # 카테고리별 상품 목록 가져오기
             products = lstcrawl.fetch_list_data(
                 url=os.getenv("API_LIST_CONNECT_URL"),
-                category=category
+                category=category["sub_code"]
             )
 
             if not products:
@@ -118,7 +65,7 @@ def main():
                 continue
 
             # 각 상품에 대한 정보 수집
-            for product in products:
+            for product in tqdm(products):
                 try:
                     # 상품 상세 정보 가져오기
                     url = f'{os.getenv("API_MAIN_URL")}{product["no"]}'
@@ -126,49 +73,68 @@ def main():
                     r.raise_for_status()
 
                     # XPath로 상품 설명 텍스트 추출
-                    words = html.fromstring(r.text).xpath(
-                        '//*[@id="description"]/div[1]/div/div/div[1]/div[2]/p/text()')
-                    words = words if words else None
+                    xpaths = [
+                        '//*[@id="description"]/div[1]/div/div/div[1]/div[2]/p/text()',
+                        '//*[@id="description"]/div/div[6]/div[3]/div[2]/p/span/text()',
+                        '//*[@id="description"]/div/div//text()'
+                    ]
+                    # 첫 번째 텍스트 추출 Words 태그
+                    # 없으면 ktx paragraph
+                    # 그래도 없으면 통째로 긁어와라
+
+                    # 상품 설명 중 2가지 태그로 나뉘는 경우가 있어 1차 검증 후 없으면 2차 검증
+
+                    for xpath in tqdm(xpaths):
+                        result = html.fromstring(r.text).xpath(xpath)
+                        if result:
+                            word = " ".join(result)
+                            break
+                    else:
+                        word = None
+
+                    logging.info(word + "\n")
 
                     # 상품 데이터 구성
                     data_dict = {
+                        'main_code' : category["main_code"],
+                        'main_category_name' : category["main_name"],
+                        'sub_code' : category["sub_code"],
+                        'sub_category_name' : category["sub_name"],
                         'no': product['no'],
                         'name': product['name'],
                         'image': product['list_image_url'],
                         'price': product['sales_price'],
                         'short_desc': product['short_description'],
-                        'words': words,
-                        'category': category
+                        'words': word
                     }
 
                     # 데이터 추가
                     final_lst.append(data_dict)
                     category_products.append(data_dict)
-                    logging.info(f"상품 '{product['name']}' 데이터 수집 완료")
+                    logging.info(f"로우데이터 수집 내용 확인 {data_dict}\n")
+                    logging.info(f"상품 '{product['name']}' 데이터 수집 완료\n")
 
                 except Exception as e:
-                    logging.error(f"상품 {product.get('no', '알 수 없음')} 처리 중 오류: {e}")
+                    logging.error(f"[{category['main_name']}:{category['sub_name']}] 상품 {product.get('no', '알 수 없음')} 처리 중 오류: {e}")
 
                 # 과도한 요청 방지를 위한 대기
-                time.sleep(7)
+                time.sleep(random.uniform(3, 7))
 
             # 현재 카테고리의 상품 데이터를 S3에 저장
             if category_products:
                 try:
                     storage.uploads_data(
                         data=category_products,
-                        object_key=f"ecomgen/products/category_{category}_{today}.json"
+                        object_key=f"ecomgen/products/category_{category['main_code']}_{category['sub_code']}_{today}.json"
                     )
-                    logging.info(f"카테고리 {category}의 상품 데이터({len(category_products)}개)를 S3에 저장했습니다")
+                    logging.info(f"카테고리 {category}의 상품 데이터({len(category_products)}개)를 S3에 저장했습니다\n")
                 except Exception as e:
                     logging.error(f"카테고리 {category} 상품 데이터 S3 저장 중 오류 발생: {e}")
 
         except Exception as e:
-            logging.error(f'카테고리 {category} 상품 처리 중 오류: {e}')
+            logging.error(f"[{category['main_name']}:{category['sub_name']}] 상품 처리 중 오류", exc_info=True)    # 최종 결과 로깅
 
-    # 최종 결과 로깅
     logging.info(f'총 {len(final_lst)}개의 상품 데이터를 수집했습니다')
-
     # 모든 상품 데이터를 S3에 저장
     try:
         # 전체 상품 데이터
@@ -182,7 +148,8 @@ def main():
             data=all_products_data,
             object_key=f"ecomgen/products/all_products_{today}.json"
         )
-        logging.info(f"전체 상품 데이터({len(final_lst)}개)를 S3에 저장했습니다")
+
+        logging.info(f"전체 상품 데이터({len(final_lst)}개)를 S3에 저장했습니다\n")
     except Exception as e:
         logging.error(f"전체 상품 데이터 S3 저장 중 오류 발생: {e}")
 
