@@ -1,4 +1,5 @@
-code = ["520", "907", "908", "909", "910", "911",
-        "912", "913", "914", "383", "249", "915",
-        "018", "032", "722", "251", "916", "918", "085", "019", "919"]
+import json
+
+with open("/Users/uicheol_hwang/EcomGen/operation/scraping/data/category_groups.json",  "r", encoding="utf-8") as file:
+        all_categories = json.load(file)
 
