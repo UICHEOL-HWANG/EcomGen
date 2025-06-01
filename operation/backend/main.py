@@ -1,11 +1,13 @@
 import logging
 from fastapi import FastAPI
 import uvicorn
-from router.auth import router
+from router.auth import router as auth_router
+from router.members import router as member_router
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(auth_router)
+app.include_router(member_router)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
