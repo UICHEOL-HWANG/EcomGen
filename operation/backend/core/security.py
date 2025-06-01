@@ -106,7 +106,7 @@ def is_refresh_token_valid(token: str, user_id: str) -> bool:
 
 # CSRF 토큰 검증
 def validate_csrf(request: Request):
-    csrf_cookie = request.cookies.get("csrf_token", "")
-    csrf_header = request.headers.get("X-CSRF-Token", "")
-    if not csrf_cookie or not csrf_header or csrf_cookie != csrf_header:
-        raise HTTPException(status_code=403, detail="Invalid CSRF token")
+    csrf_token_header = request.headers.get("X-CSRF-Token")
+    csrf_token_cookie = request.cookies.get("csrf_token")
+    if not csrf_token_header or not csrf_token_cookie or csrf_token_header != csrf_token_cookie:
+        raise HTTPException(status_code=403, detail="CSRF token missing or invalid")

@@ -1,27 +1,28 @@
+# pip Modules
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
 from sqlalchemy.orm import Session
-from model.database import get_db
+import secrets
+from jose import JWTError, jwt
+from datetime import datetime
+
+# My Modules
 from dto.user import UserCreate, UserLogin
+from model.database import get_db
+from model.settings import settings
 from service.auth_service import create_user, authenticate_user
 from core.security import (
     create_access_token, create_refresh_token,
-    set_token_cookies, clear_token_cookies
+    set_token_cookies, clear_token_cookies, validate_csrf,
+    is_refresh_token_valid
 )
-import secrets
-from jose import JWTError, jwt
-from model.settings import settings
 from utils.pymongo import get_token_collection
-from datetime import datetime
+
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 token_collection = get_token_collection()
 
-def validate_csrf(request: Request):
-    csrf_token_header = request.headers.get("X-CSRF-Token")
-    csrf_token_cookie = request.cookies.get("csrf_token")
-    if not csrf_token_header or not csrf_token_cookie or csrf_token_header != csrf_token_cookie:
-        raise HTTPException(status_code=403, detail="CSRF token missing or invalid")
+
 
 @router.post("/signup")
 def signup(user_data: UserCreate, db: Session = Depends(get_db)):
@@ -103,14 +104,7 @@ def refresh_token(request: Request, response: Response):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
-    token_doc = token_collection.find_one({
-        "refresh_token": refresh_token,
-        "user_id": user_id,
-        "is_revoked": False,
-        "expires_at": { "$gt": datetime.utcnow() }
-    })
-
-    if not token_doc:
+    if not is_refresh_token_valid(refresh_token, user_id):
         raise HTTPException(status_code=401, detail="Refresh token is invalid or revoked")
 
     new_access_token = create_access_token(user_id)

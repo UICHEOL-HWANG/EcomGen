@@ -1,10 +1,13 @@
+# pip Modules
 from datetime import datetime
 from fastapi import Cookie
-from utils.pymongo import get_token_collection
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
+
+# My Modules
 from model.database import get_db
 from core.security import get_current_user, validate_csrf
+from utils.pymongo import get_token_collection
 from dto.user import UserUpdate, UserOut
 from service.member_service import update_user_info, delete_user
 
@@ -18,7 +21,7 @@ def read_my_info(
     validate_csrf(request)
     return current_user
 
-@router.put("/me", response_model=dict, status_code=status.HTTP_200_OK)
+@router.put("/update_account", response_model=dict, status_code=status.HTTP_200_OK)
 def update_my_info(
     request: Request,
     update_data: UserUpdate,
@@ -29,7 +32,7 @@ def update_my_info(
     updated_user = update_user_info(db, current_user["id"], update_data)
     return {"message": "User updated", "user": updated_user}
 
-@router.delete("/me", response_model=dict, status_code=status.HTTP_200_OK)
+@router.delete("/delete_account", response_model=dict, status_code=status.HTTP_200_OK)
 def delete_my_account(
     request: Request,
     db: Session = Depends(get_db),
