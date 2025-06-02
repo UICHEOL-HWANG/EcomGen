@@ -50,7 +50,7 @@ def main():
     lstcrawl = ListCrawl(header=headers, cookie=cookies, params=params)
 
     # 각 카테고리에 대한 상품 정보 수집
-    for category in tqdm(all_categories, desc="상품 데이터 수집"):
+    for category in tqdm(all_categories[:1], desc="상품 데이터 수집"):
         category_products = []  # 현재 카테고리의 상품 목록
 
         try:
@@ -65,7 +65,7 @@ def main():
                 continue
 
             # 각 상품에 대한 정보 수집
-            for product in tqdm(products):
+            for product in tqdm(products[:1]):
                 try:
                     # 상품 상세 정보 가져오기
                     url = f'{os.getenv("API_MAIN_URL")}{product["no"]}'
@@ -92,7 +92,7 @@ def main():
                     else:
                         word = None
 
-                    logging.info(word + "\n")
+                    logging.info(f"{word}\n" if word else f"[{product['no']}] 상품 설명 없음\n")
 
                     # 상품 데이터 구성
                     data_dict = {
