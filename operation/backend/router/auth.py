@@ -22,8 +22,6 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 token_collection = get_token_collection()
 
-
-
 @router.post("/signup")
 def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     user = create_user(db, user_data)
