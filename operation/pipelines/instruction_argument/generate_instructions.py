@@ -1,11 +1,12 @@
-from cleansing.category_piepelines import TONE_MAPPING, TONE_DESCRIPTIONS
+from cleansing.category_piepelines import TONE_MAPPING, TONE_DESCRIPTIONS, TONE_PRODUCT_NAME_MAPPING
 import pandas as pd
 
 
 class InstructionGenerator:
-    def __init__(self):
-        self.tone_mapping = TONE_MAPPING
-        self.tone_descriptions = TONE_DESCRIPTIONS
+    def __init__(self,  tone_mapping, tone_descriptions, tone_product_name_mapping):
+        self.tone_mapping = tone_mapping
+        self.tone_descriptions = tone_descriptions
+        self.tone_product_name_mapping = tone_product_name_mapping
 
     def get_suitable_tones(self, main_category, sub_category):
         if main_category in self.tone_mapping:
@@ -37,9 +38,10 @@ class InstructionGenerator:
             sub_cat = row['sub_category_name']
             suitable_tones = self.get_suitable_tones(main_cat, sub_cat)
             for tone in suitable_tones:
+                original_name = row['name_cleaned']
                 augmented_item = {
                     "original_id": idx,
-                    "name_cleaned": row['name_cleaned'],
+                    "name_cleaned": self.tone_product_name_mapping.get(tone, "{}").format(original_name),
                     "main_category_name": main_cat,
                     "sub_category_name": sub_cat,
                     "price": row['price'],
@@ -50,4 +52,3 @@ class InstructionGenerator:
                 }
                 augmented_data.append(augmented_item)
         return augmented_data
-
