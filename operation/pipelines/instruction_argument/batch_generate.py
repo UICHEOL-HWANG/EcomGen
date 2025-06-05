@@ -1,20 +1,16 @@
 import json
 import openai
-
+import logging
+from typing import List
 
 class BatchGenerator:
     def __init__(self, api_key: str):
         self.client = openai.OpenAI(api_key=api_key)
         self.model = "gpt-4.1-nano-2025-04-14"
 
-    def create_batch(self, json_file: str) -> str:
-        """JSON 파일로 배치 생성하고 batch_id 반환"""
-        # 1. 데이터 로드
-        with open(json_file, 'r', encoding='utf-8') as f:
-            products = json.load(f)
-        print(f"Loaded {len(products)} products")
+    def create_batch(self, products: List) -> str:
 
-        # 2. 배치 요청 생성
+        # 1. 배치 요청 생성
         requests = []
         for i, product in enumerate(products):  # enumerate로 고유 인덱스 사용
             keywords = product.get('top_keywords', '')
@@ -56,7 +52,7 @@ class BatchGenerator:
             completion_window="24h"
         )
 
-        print(f"Batch created: {batch.id}")
+        logging.info(f"Batch created: {batch.id}")
         return batch.id
 
     def check_status(self, batch_id: str) -> str:
@@ -69,7 +65,7 @@ class BatchGenerator:
         batch = self.client.batches.retrieve(batch_id)
 
         if batch.status != "completed":
-            print(f"Not completed. Status: {batch.status}")
+            logging.info(f"Not completed. Status: {batch.status}")
             return None
 
         # 결과 다운로드
@@ -78,7 +74,7 @@ class BatchGenerator:
         with open("results.jsonl", "wb") as f:
             f.write(result_content.content)
 
-        print("Results saved to results.jsonl")
+        logging.info("Results saved to results.jsonl")
         return "results.jsonl"
 
     def create_training_data(self, original_json: str, results_file: str = "results.jsonl"):
@@ -119,10 +115,5 @@ class BatchGenerator:
         with open("training_data.json", 'w', encoding='utf-8') as f:
             json.dump(training_data, f, ensure_ascii=False, indent=2)
 
-        print(f"Training data created: {len(training_data)} items -> training_data.json")
+        logging.info(f"Training data created: {len(training_data)} items -> training_data.json")
         return training_data
-
-
-
-if __name__ == "__main__":
-    main()
