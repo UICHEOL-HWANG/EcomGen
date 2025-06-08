@@ -4,7 +4,7 @@ from peft import PeftModel
 
 def merge_adapter():
     # 1. 베이스 모델 및 토크나이저 로드w
-    model_name = "EleutherAI/polyglot-ko-1.3b"
+    model_name = "EleutherAI/gemma-3-ko-1.3b"
     model = AutoModelForCausalLM.from_pretrained(model_name)
 
 

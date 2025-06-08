@@ -6,7 +6,7 @@ from trl import SFTTrainer
 
 class Train:
     def __init__(self):
-        base_model = "EleutherAI/polyglot-ko-1.3b"  # 🔹 원본 모델 사용
+        base_model = "EleutherAI/gemma-3-ko-1.3b"  # 🔹 원본 모델 사용
 
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,  # ✅ 4-bit 양자화 적용

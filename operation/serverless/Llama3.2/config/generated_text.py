@@ -6,7 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct", **kwargs):
+def generate_description(text, model_path="UICHEOL-HWANG/EcomGen-Llama3.2-3B", **kwargs):
     """
     상품명으로 설명 생성
 
@@ -25,9 +25,9 @@ def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
-            trust_remote_code=True,
-            device_map="auto"
+            device_map="auto",
         )
+
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         logging.info("모델 로드 완료")
 
@@ -37,9 +37,7 @@ def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
 
     # 프롬프트 구성
     messages = [
-        {"role": "system",
-         "content": "당신은 전문적인 상품 설명 에디터입니다. 다음 상품 설명을 읽고, 더 명확하고 매력적으로 다듬어주세요."},
-        {"role": "user", "content": text}
+        {"role": "user", "content": f"{text}"}
     ]
 
     logging.info(f"프롬프트 준비 완료")
@@ -48,16 +46,22 @@ def generate_description(text, model_path="LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct"
         # 토크나이즈
         input_ids = tokenizer.apply_chat_template(
             messages,
-            tokenize=True,
             add_generation_prompt=True,
             return_tensors="pt"
-        )
+        ).to(model.device)
+
+        terminators = [
+            tokenizer.convert_tokens_to_ids("<|end_of_text|>"),
+            tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
 
         # 기본 생성 파라미터
         generation_params = {
-            "eos_token_id": tokenizer.eos_token_id,
+            "eos_token_id": terminators,
             "max_new_tokens": 512,
-            "do_sample": False,
+            "do_sample": True,
+            "temperature" : 0.6,
+            "top_p" : 0.9
         }
 
         # 사용자 제공 파라미터로 기본값 덮어쓰기
