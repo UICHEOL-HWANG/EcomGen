@@ -9,16 +9,16 @@ WORKDIR /app
 
 # transformers를 명시된 안전 버전으로 고정
 RUN pip install --no-cache-dir \
-    transformers==4.51.3 \
+    transformers \
     accelerate \
     requests \
-    runpod \
-    sentencepiece \
-    protobuf==3.20.3
+    runpod
 
 COPY . . /app/
 
 # Hugging Face 모델 캐시 위치 설정
 ENV HF_HOME=/app/hf_cache
+
+ENV TORCHDYNAMO_DISABLE=1
 
 CMD ["python", "main.py"]

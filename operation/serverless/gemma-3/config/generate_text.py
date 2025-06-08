@@ -1,3 +1,4 @@
+import os
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import logging
@@ -5,8 +6,12 @@ import logging
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Gemma-3 모델인 경우 TorchDynamo 비활성화
+if "gemma" in model_path.lower():
+    os.environ["TORCHDYNAMO_DISABLE"] = "1"
 
-def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v", **kwargs):
+
+def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-Gemma3-4B", **kwargs):
     """
     상품명으로 설명 생성
 
@@ -20,24 +25,31 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
     """
     logging.info(f"모델 로드 중: {model_path}")
 
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True).to(device)
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=torch.bfloat16,
+        device_map="auto"
+    )
 
     # 패딩 토큰 확인
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    # GPU 사용 가능 시 모델 이동
-    if torch.cuda.is_available():
-        logging.info(f"모델이 GPU로 이동되었습니다: {model.device}")
-    else:
-        logging.info("GPU를 사용할 수 없어 CPU에서 실행됩니다")
-
     # 프롬프트 구성
-    prompt = f"상품명: {product_name}\n상품 설명: "
-    logging.info(f"프롬프트: {prompt}")
+    messages = [{
+        "role": "user",
+        "content": [{"type": "text", "text": product_name}]
+    }]
+
+
+    prompt = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=False
+    )
+
+    logging.info(f"프롬프트: {messages}")
 
     # 기본 생성 파라미터
     generation_params = {
@@ -47,14 +59,14 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-0.0.1v"
         "top_p": 0.9,
         "top_k": 40,
         "do_sample": True,
-        "pad_token_id": tokenizer.eos_token_id  # 패딩 토큰 ID 설정
+        "pad_token_id": tokenizer.eos_token_id
     }
 
     generation_params.update(kwargs)
     logging.info(f"생성 파라미터: {generation_params}")
 
     # 입력 토큰화
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
     # 텍스트 생성
     logging.info("텍스트 생성 중...")
