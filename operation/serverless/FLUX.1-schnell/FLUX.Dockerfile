@@ -7,10 +7,14 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 RUN pip install --no-cache-dir \
-    transformers==4.51.3 \
+    diffusers \
+    transformers \
     accelerate \
     requests \
-    runpod
+    runpod \
+    huggingface-hub \
+    sentencepiece \
+    protobuf
 
 COPY . . /app/
 

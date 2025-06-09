@@ -6,10 +6,6 @@ import logging
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Gemma-3 모델인 경우 TorchDynamo 비활성화
-if "gemma" in model_path.lower():
-    os.environ["TORCHDYNAMO_DISABLE"] = "1"
-
 
 def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-Gemma3-4B", **kwargs):
     """
@@ -25,7 +21,7 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-Gemma3-
     """
     logging.info(f"모델 로드 중: {model_path}")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.bfloat16,
@@ -59,7 +55,8 @@ def generate_description(product_name, model_path="UICHEOL-HWANG/EcomGen-Gemma3-
         "top_p": 0.9,
         "top_k": 40,
         "do_sample": True,
-        "pad_token_id": tokenizer.eos_token_id
+        "pad_token_id" : tokenizer.pad_token_id,
+        "eos_token_id": tokenizer.eos_token_id
     }
 
     generation_params.update(kwargs)

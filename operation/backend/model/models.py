@@ -13,7 +13,6 @@ class Member(Base):
     password = Column(String(255), nullable=False)
     username = Column(String(255), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     product_descriptions = relationship("ProductDescription", back_populates="user")
     reports = relationship("Report", back_populates="user")
@@ -24,7 +23,9 @@ class ProductDescription(Base):
     id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
     product_name = Column(String(255), nullable=False)
+    input_prompt = Column(Text, nullable=False)
     generated_description = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("Member", back_populates="product_descriptions")
     showcase_item = relationship("ShowcaseItem", uselist=False, back_populates="product_description")
