@@ -1,6 +1,6 @@
 import logging
 import traceback
-from config.generate_text import generate_description
+from config.generated_text import generate_description
 import runpod
 
 # 로깅 설정
