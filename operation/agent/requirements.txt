@@ -1,0 +1,36 @@
+# RunPod Serverless
+runpod
+
+# Core ML/AI Libraries
+torch>=2.1.0
+transformers==4.51.3
+accelerate
+tokenizers
+
+# LangChain Ecosystem
+langchain==0.3.10
+langchain-community==0.3.10
+langchain-huggingface==0.1.2
+langchain-core==0.3.21
+langgraph==0.2.57
+
+# Web Search & HTTP
+tavily-python
+requests
+httpx
+
+# Data Processing
+numpy
+pandas
+
+# Utilities
+python-dotenv
+pydantic==2.10.3
+googletrans==4.0.0rc1
+jsonschema
+tqdm
+typing-extensions
+
+# Optional: Development & Debugging
+# langsmith  # LangSmith 추적용 (선택사항)
+# jupyter    # 개발용 (선택사항)
