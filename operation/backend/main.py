@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import uvicorn
 from router.auth import router as auth_router
 from router.members import router as member_router
-from router.generated_text import router as generated_router
+from router.generate import router as generated_router
 
 app = FastAPI()
 
