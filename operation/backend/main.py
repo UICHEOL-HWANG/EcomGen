@@ -16,12 +16,21 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
+# CORS 설정 - withCredentials: true를 위해 구체적인 origin 지정
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 배포 시에는 origin 제한 권장
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,  # 쿠키 전송 허용
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type", 
+        "Authorization", 
+        "X-CSRF-Token", 
+        "X-CSRFToken"
+    ],
 )
 
 app.include_router(member_router)

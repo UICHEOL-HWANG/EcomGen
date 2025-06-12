@@ -1,47 +1,35 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+  <div id="app" class="min-h-screen bg-gray-50">
+    <!-- 모바일 중심 컨테이너 -->
+    <div class="max-w-sm mx-auto bg-white min-h-screen flex flex-col">
+      <Header />
+      <main class="flex-1 pb-20">
+        <router-view />
+      </main>
+      <BottomNav />
     </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
+<script setup>
+import Header from '@/components/Header.vue'
+import BottomNav from '@/components/BottomNav.vue'
+</script>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafb;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+/* 스크롤바 숨기기 */
+::-webkit-scrollbar {
+  display: none;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>
