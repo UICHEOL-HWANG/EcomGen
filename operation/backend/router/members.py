@@ -13,6 +13,9 @@ from core.security import get_current_user, validate_csrf
 from utils.pymongo import get_token_collection
 from dto.user import UserUpdate, UserOut, PasswordChange
 from service.member_service import update_user_info, delete_user, change_user_password
+from service.profile_upload_service import handle_profile_picture_upload, delete_profile_picture
+
+from dto.profile import ProfileUploadRequest
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -57,7 +60,7 @@ def delete_my_account(
     return {"message": "User deleted"}
 
 
-# router/members.py에서는 간단하게
+
 @router.put("/change-password")
 def change_password(
         request: Request,
@@ -78,3 +81,23 @@ def change_password(
         password_data.current_password,
         password_data.new_password
     )
+
+
+# Upload profile picture route
+@router.post("/upload-profile", response_model=dict)
+def upload_profile_picture(
+    request: Request,
+    data: ProfileUploadRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    validate_csrf(request)
+    return handle_profile_picture_upload(current_user["id"], data.base64_data)
+
+
+@router.delete("/delete-profile", response_model=dict)
+def delete_profile_picture_route(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    validate_csrf(request)
+    return delete_profile_picture(current_user["id"])
