@@ -11,7 +11,9 @@ export const useUserStore = defineStore('user', {
   
   getters: {
     isAuthenticated: (state) => state.isLoggedIn && !!state.user,
-    userInfo: (state) => state.user
+    userInfo: (state) => state.user,
+    userName: (state) => state.user?.username || state.user?.name || '',
+    userEmail: (state) => state.user?.email || ''
   },
   
   actions: {
@@ -111,6 +113,13 @@ export const useUserStore = defineStore('user', {
         this.isLoggedIn = false
         this.user = null
         throw error
+      }
+    },
+    
+    // 사용자 정보 업데이트 (로컬 상태 직접 업데이트)
+    updateUserInfo(updatedInfo) {
+      if (this.user) {
+        this.user = { ...this.user, ...updatedInfo }
       }
     },
     

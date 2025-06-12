@@ -252,11 +252,60 @@
         </div>
       </div>
     </div>
+
+    <!-- 성공 모달 -->
+    <Transition name="success-modal">
+      <div v-if="showSuccessModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center transform transition-all duration-300">
+          <!-- 성공 아이콘 -->
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">✅</span>
+          </div>
+          
+          <h3 class="text-lg font-bold text-gray-900 mb-2">성공적으로 변경되었습니다!</h3>
+          <p class="text-sm text-gray-600 mb-6">
+내 정보가 성공적으로 업데이트되었습니다.
+          </p>
+          
+          <button 
+            @click="showSuccessModal = false"
+            class="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 비밀번호 변경 성공 모달 -->
+    <Transition name="success-modal">
+      <div v-if="showPasswordChangeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center transform transition-all duration-300">
+          <!-- 보안 아이콘 -->
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🔒</span>
+          </div>
+          
+          <h3 class="text-lg font-bold text-gray-900 mb-2">비밀번호가 변경되었습니다</h3>
+          <p class="text-sm text-gray-600 mb-6">
+보안상 재로그인이 필요합니다.<br />
+로그인 페이지로 이동합니다.
+          </p>
+          
+          <button 
+            @click="handleRelogin"
+            class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+          >
+            로그인 페이지로 이동
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/userStore'
 import { updateMyInfo, changePassword, deleteAccount } from '@/api/auth'
@@ -268,6 +317,8 @@ const userStore = useUserStore()
 const showEditProfile = ref(false)
 const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
+const showSuccessModal = ref(false)
+const showPasswordChangeModal = ref(false)
 
 // 폼 데이터
 const editForm = ref({
@@ -316,9 +367,27 @@ const handleUpdateProfile = async () => {
   }
 
   try {
-    await updateMyInfo(editForm.value)
-    await userStore.fetchUserInfo() // 사용자 정보 새로고침
+    const response = await updateMyInfo(editForm.value)
+    
+    // 서버 응답이 사용자 정보를 담고 있다면 사용, 그렇지 않으면 폼 데이터 사용
+    const updatedUserInfo = response.user || response || editForm.value
+    
+    // userStore의 사용자 정보를 즉시 업데이트
+    userStore.updateUserInfo(updatedUserInfo)
+    
+    // 폼 데이터도 업데이트된 정보로 동기화
+    editForm.value = {
+      username: updatedUserInfo.username || updatedUserInfo.name || editForm.value.username,
+      email: updatedUserInfo.email || editForm.value.email
+    }
+    
     showEditProfile.value = false
+    
+    // 성공 모달 표시 및 3초 후 자동 닫기
+    showSuccessModal.value = true
+    setTimeout(() => {
+      showSuccessModal.value = false
+    }, 3000)
   } catch (error) {
     editError.value = error.detail || '정보 수정에 실패했습니다.'
   }
@@ -356,6 +425,9 @@ const handleChangePassword = async () => {
       newPassword: '',
       confirmPassword: ''
     }
+    
+    // 비밀번호 변경 성공 모달 표시
+    showPasswordChangeModal.value = true
   } catch (error) {
     passwordError.value = error.detail || '비밀번호 변경에 실패했습니다.'
   }
@@ -372,4 +444,37 @@ const handleDeleteAccount = async () => {
     deleteError.value = error.detail || '계정 삭제에 실패했습니다.'
   }
 }
+
+// 비밀번호 변경 후 재로그인 처리
+const handleRelogin = async () => {
+  try {
+    await userStore.logoutUser()
+    router.push('/login')
+  } catch (error) {
+    console.error('로그아웃 실패:', error)
+    // 로그아웃 실패해도 로그인 페이지로 이동
+    router.push('/login')
+  }
+}
 </script>
+
+<style scoped>
+/* 성공 모달 애니메이션 */
+.success-modal-enter-active {
+  transition: opacity 0.3s ease;
+}
+
+.success-modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.success-modal-enter-from,
+.success-modal-leave-to {
+  opacity: 0;
+}
+
+.success-modal-enter-to,
+.success-modal-leave-from {
+  opacity: 1;
+}
+</style>

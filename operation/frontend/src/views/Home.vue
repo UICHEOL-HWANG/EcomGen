@@ -144,7 +144,7 @@
         
         <!-- AI 에이전트 검색 버튼 -->
         <button 
-          @click="showReportModal = true"
+          @click="userStore.isAuthenticated ? showReportModal = true : showLoginModal = true"
           class="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all"
         >
           🔍 AI 에이전트에게 검색하기
@@ -184,9 +184,11 @@
         </div>
       </div>
     </section>
-    
-    <!-- AI 에이전트 검색 모달 -->
-    <div v-if="showReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  </div>
+  
+  <!-- AI 에이전트 검색 모달 - Teleport로 body에 렌더링 -->
+  <Teleport to="body">
+    <div v-if="showReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 9999;">
       <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
         <!-- 모달 헤더 -->
         <div class="bg-gradient-to-r from-purple-500 to-blue-500 p-6 text-white">
@@ -278,11 +280,56 @@
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
+  
+  <!-- 로그인 안내 모달 - Teleport로 body에 렌더링 -->
+  <Teleport to="body">
+    <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 9999;">
+      <div class="bg-white rounded-2xl max-w-sm w-full p-6">
+        <!-- 모달 헤더 -->
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🔒</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">로그인이 필요합니다</h3>
+          <p class="text-sm text-gray-600">
+AI 리포트 기능은 로그인 후<br />
+이용할 수 있습니다.
+          </p>
+        </div>
+        
+        <!-- 버튼들 -->
+        <div class="space-y-3">
+          <router-link 
+            to="/login"
+            @click="closeLoginModal"
+            class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition text-center block"
+          >
+            로그인하기
+          </router-link>
+          
+          <router-link 
+            to="/signup"
+            @click="closeLoginModal"
+            class="w-full py-3 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition text-center block"
+          >
+            회원가입
+          </router-link>
+          
+          <button 
+            @click="closeLoginModal"
+            class="w-full py-2 text-gray-500 text-sm hover:text-gray-700 transition"
+          >
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, Teleport } from 'vue'
 import { useUserStore } from '@/store/userStore'
 import { useRouter } from 'vue-router'
 
@@ -292,6 +339,7 @@ const router = useRouter()
 
 // 모달 상태
 const showReportModal = ref(false)
+const showLoginModal = ref(false)
 const searchQuery = ref('')
 const searchResult = ref('')
 const isSearching = ref(false)
@@ -317,6 +365,12 @@ const handleLogout = async () => {
 
 // 리포트 페이지로 이동
 const goToReports = (type = null) => {
+  // 로그인 확인
+  if (!userStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+  
   // TODO: 리포트 페이지가 만들어지면 실제 라우팅
   if (type) {
     // 특정 리포트 타입으로 이동
@@ -338,6 +392,11 @@ const closeReportModal = () => {
   searchQuery.value = ''
   searchResult.value = ''
   isSearching.value = false
+}
+
+// 로그인 모달 닫기
+const closeLoginModal = () => {
+  showLoginModal.value = false
 }
 
 // AI 검색 처리
