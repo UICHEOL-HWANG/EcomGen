@@ -3,18 +3,28 @@
     <!-- 사용자 정보 카드 -->
     <section class="mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-6 text-center">
-        <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-2xl">👤</span>
+        <div class="relative w-20 h-20 mx-auto mb-4">
+          <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img 
+              v-if="userStore.user?.profile_image" 
+              :src="userStore.user.profile_image" 
+              alt="Profile" 
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-2xl">👤</span>
+          </div>
+          <!-- 프로필 사진 변경 버튼 -->
+          <button 
+            @click="showProfileImageModal = true"
+            class="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-md"
+          >
+            <span class="text-white text-xs">✏️</span>
+          </button>
         </div>
         <h2 class="text-xl font-bold text-gray-900 mb-1">
           {{ userStore.user?.username || userStore.user?.name || '사용자' }}
         </h2>
         <p class="text-gray-600 text-sm mb-4">{{ userStore.user?.email }}</p>
-        <div class="flex items-center justify-center gap-2">
-          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-            ✅ 인증됨
-          </span>
-        </div>
       </div>
     </section>
 
@@ -29,7 +39,7 @@
           <span class="text-lg">✏️</span>
           <div class="text-left">
             <h3 class="font-semibold text-gray-900">내 정보 수정</h3>
-            <p class="text-sm text-gray-600">이름, 이메일 변경</p>
+            <p class="text-sm text-gray-600">이름 변경</p>
           </div>
         </div>
         <span class="text-gray-400">›</span>
@@ -62,13 +72,13 @@
         <span class="text-gray-400">›</span>
       </button>
 
-      <!-- 설정 -->
+      <!-- 내가 검색한 리포트 -->
       <button class="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition">
         <div class="flex items-center gap-3">
-          <span class="text-lg">⚙️</span>
+          <span class="text-lg">📈</span>
           <div class="text-left">
-            <h3 class="font-semibold text-gray-900">설정</h3>
-            <p class="text-sm text-gray-600">알림, 개인정보 설정</p>
+            <h3 class="font-semibold text-gray-900">내가 검색한 리포트</h3>
+            <p class="text-sm text-gray-600">AI 에이전트 검색 기록 보기</p>
           </div>
         </div>
         <span class="text-gray-400">›</span>
@@ -120,16 +130,6 @@
             <input
               v-model="editForm.username"
               type="text"
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            />
-          </div>
-          
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">이메일</label>
-            <input
-              v-model="editForm.email"
-              type="email"
               required
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
@@ -301,6 +301,76 @@
         </div>
       </div>
     </Transition>
+
+    <!-- 프로필 사진 변경 모달 -->
+    <Transition name="success-modal">
+      <div v-if="showProfileImageModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-900">프로필 사진 변경</h3>
+            <button @click="showProfileImageModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
+          
+          <!-- 현재 프로필 사진 -->
+          <div class="text-center mb-6">
+            <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 overflow-hidden">
+              <img 
+                v-if="userStore.user?.profile_image" 
+                :src="userStore.user.profile_image" 
+                alt="Profile" 
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-3xl">👤</span>
+            </div>
+            <p class="text-sm text-gray-600">현재 프로필 사진</p>
+          </div>
+          
+          <!-- 옵션 버튼들 -->
+          <div class="space-y-3">
+            <button 
+              @click="handleCameraCapture"
+              :disabled="userStore.loading"
+              class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+            >
+              <span>📷</span>
+              카메라로 촬영
+            </button>
+            
+            <button 
+              @click="handleGallerySelect"
+              :disabled="userStore.loading"
+              class="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+            >
+              <span>🖼️</span>
+              갤러리에서 선택
+            </button>
+            
+            <button 
+              @click="handleDeleteProfileImage"
+              :disabled="userStore.loading || !userStore.user?.profile_image"
+              class="w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+            >
+              <span>🗑️</span>
+              프로필 사진 삭제
+            </button>
+            
+            <button 
+              @click="showProfileImageModal = false"
+              class="w-full py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 카메라 촬영 컴포넌트 -->
+    <CameraCapture 
+      v-if="showCameraCapture"
+      @captured="onCameraCaptured"
+      @close="onCameraClose"
+    />
   </div>
 </template>
 
@@ -308,7 +378,8 @@
 import { ref, onMounted, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/userStore'
-import { updateMyInfo, changePassword, deleteAccount } from '@/api/auth'
+import { updateMyInfo, changePassword, deleteAccount, uploadProfileImage, deleteProfileImage } from '@/api/auth'
+import CameraCapture from '@/components/CameraCapture.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -319,11 +390,12 @@ const showChangePassword = ref(false)
 const showDeleteAccount = ref(false)
 const showSuccessModal = ref(false)
 const showPasswordChangeModal = ref(false)
+const showProfileImageModal = ref(false)
+const showCameraCapture = ref(false)
 
 // 폼 데이터
 const editForm = ref({
-  username: '',
-  email: ''
+  username: ''
 })
 
 const passwordForm = ref({
@@ -341,8 +413,7 @@ const deleteError = ref('')
 onMounted(() => {
   if (userStore.user) {
     editForm.value = {
-      username: userStore.user.username || userStore.user.name || '',
-      email: userStore.user.email || ''
+      username: userStore.user.username || userStore.user.name || ''
     }
   }
 })
@@ -361,8 +432,8 @@ const handleLogout = async () => {
 const handleUpdateProfile = async () => {
   editError.value = ''
   
-  if (!editForm.value.username || !editForm.value.email) {
-    editError.value = '모든 필드를 입력해주세요.'
+  if (!editForm.value.username) {
+    editError.value = '이름을 입력해주세요.'
     return
   }
 
@@ -377,8 +448,7 @@ const handleUpdateProfile = async () => {
     
     // 폼 데이터도 업데이트된 정보로 동기화
     editForm.value = {
-      username: updatedUserInfo.username || updatedUserInfo.name || editForm.value.username,
-      email: updatedUserInfo.email || editForm.value.email
+      username: updatedUserInfo.username || updatedUserInfo.name || editForm.value.username
     }
     
     showEditProfile.value = false
@@ -454,6 +524,92 @@ const handleRelogin = async () => {
     console.error('로그아웃 실패:', error)
     // 로그아웃 실패해도 로그인 페이지로 이동
     router.push('/login')
+  }
+}
+
+// 갤러리에서 사진 선택
+const handleGallerySelect = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  
+  input.onchange = async (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      await uploadProfileImageFile(file)
+    }
+  }
+  
+  input.click()
+}
+
+// 카메라로 촬영
+const handleCameraCapture = () => {
+  showProfileImageModal.value = false
+  showCameraCapture.value = true
+}
+
+// 카메라에서 사진 촬영 완료
+const onCameraCaptured = async (file) => {
+  showCameraCapture.value = false
+  await uploadProfileImageFile(file)
+}
+
+// 카메라 닫기
+const onCameraClose = () => {
+  showCameraCapture.value = false
+  showProfileImageModal.value = true // 프로필 모달로 되돌아가기
+}
+
+// 프로필 이미지 업로드
+const uploadProfileImageFile = async (file) => {
+  try {
+    userStore.loading = true
+    
+    const response = await uploadProfileImage(file)
+    
+    // 사용자 정보 업데이트
+    userStore.updateUserInfo({
+      profile_image: response.profile_image_url
+    })
+    
+    showProfileImageModal.value = false
+    showSuccessModal.value = true
+    setTimeout(() => {
+      showSuccessModal.value = false
+    }, 3000)
+    
+  } catch (error) {
+    console.error('프로필 사진 업로드 실패:', error)
+    alert('프로필 사진 업로드에 실패했습니다.')
+  } finally {
+    userStore.loading = false
+  }
+}
+
+// 프로필 사진 삭제
+const handleDeleteProfileImage = async () => {
+  try {
+    userStore.loading = true
+    
+    await deleteProfileImage()
+    
+    // 사용자 정보에서 프로필 사진 제거
+    userStore.updateUserInfo({
+      profile_image: null
+    })
+    
+    showProfileImageModal.value = false
+    showSuccessModal.value = true
+    setTimeout(() => {
+      showSuccessModal.value = false
+    }, 3000)
+    
+  } catch (error) {
+    console.error('프로필 사진 삭제 실패:', error)
+    alert('프로필 사진 삭제에 실패했습니다.')
+  } finally {
+    userStore.loading = false
   }
 }
 </script>

@@ -16,7 +16,6 @@ function getCSRFToken() {
   return match ? match[2] : null
 }
 
-// ✅ 요청 인터셉터: CSRF 토큰 추가
 axiosInstance.interceptors.request.use(
   (config) => {
     const csrfToken = getCSRFToken()

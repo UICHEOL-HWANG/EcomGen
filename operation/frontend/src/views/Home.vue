@@ -54,7 +54,12 @@
     <section class="mb-8">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold text-gray-900">🔥 다른 회원들의 추천 상품</h2>
-        <button class="text-sm text-blue-600 hover:text-blue-700">더보기</button>
+        <button 
+          @click="goToRecommendedProducts"
+          class="text-sm text-blue-600 hover:text-blue-700"
+        >
+          더보기
+        </button>
       </div>
       
       <!-- 스라이드 컨테이너 -->
@@ -159,7 +164,7 @@
           <span class="text-xl">⚡</span>
           <div>
             <h2 class="font-semibold text-gray-900 mb-1">빠른 시작</h2>
-            <p class="text-sm text-gray-600">회원가입 없이 상품명만 입력해 바로 생성할 수 있어요.</p>
+            <p class="text-sm text-gray-600">회원가입 하고 상품명만 입력해 바로 생성할 수 있어요.</p>
           </div>
         </div>
       </div>
@@ -450,6 +455,11 @@ const shareReport = () => {
     navigator.clipboard.writeText(searchResult.value)
     alert('리포트가 클립보드에 복사되었습니다! 📋')
   }
+}
+
+// 추천 상품 페이지로 이동
+const goToRecommendedProducts = () => {
+  router.push('/recommended-products')
 }
 
 // 추천 상품 데이터 (실제로는 API에서 가져올 데이터)
