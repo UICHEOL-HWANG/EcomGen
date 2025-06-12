@@ -13,6 +13,7 @@ class Member(Base):
     password = Column(String(255), nullable=False)
     username = Column(String(255), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    profile_pic = Column(String(500), nullable=True)  # 프로필 사진 URL (선택 사항)
 
     product_descriptions = relationship("ProductDescription", back_populates="user")
     reports = relationship("Report", back_populates="user")

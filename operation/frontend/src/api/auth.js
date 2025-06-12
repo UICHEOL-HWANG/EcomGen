@@ -79,3 +79,30 @@ export const deleteAccount = async () => {
     throw error.response?.data || error.message
   }
 }
+
+// 프로필 이미지 업로드
+export const uploadProfileImage = async (file) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const response = await axios.post('/member/upload-profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  } catch (error) {
+    throw error.response?.data || error.message
+  }
+}
+
+// 프로필 이미지 삭제
+export const deleteProfileImage = async () => {
+  try {
+    const response = await axios.delete('/member/profile-image')
+    return response.data
+  } catch (error) {
+    throw error.response?.data || error.message
+  }
+}
