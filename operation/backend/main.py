@@ -5,8 +5,6 @@ import uvicorn
 from router.auth import router as auth_router
 from router.members import router as member_router
 from router.generate import router as generated_router
-import mangum
-
 
 app = FastAPI(
     title="Shop Lingo API",

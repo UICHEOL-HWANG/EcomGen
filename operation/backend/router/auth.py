@@ -16,7 +16,7 @@ from core.security import (
     is_refresh_token_valid
 )
 from utils.pymongo import get_token_collection
-from model.models import Member  # ensure this import exists near the top
+from model.models import Member 
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
