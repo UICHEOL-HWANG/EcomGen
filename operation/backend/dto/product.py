@@ -2,6 +2,10 @@ from pydantic import BaseModel
 
 class ProductDescriptionRequest(BaseModel):
     product_name: str
+    category: str
+    price: int
+    keywords: list[str]
+    tone: str
 
 class ProductDescriptionResponse(BaseModel):
     description: str

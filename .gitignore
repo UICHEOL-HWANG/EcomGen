@@ -6,6 +6,28 @@ __pycache__/
 # C extensions
 *.so
 
+# Node.js
+node_modules/
+dist/
+.env
+.env.*         # 환경변수 파일들
+
+# Vite
+.vite/
+.cache/
+*.log
+*.local
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Optional OS-specific
+Thumbs.db
+
+
 # Distribution / packaging
 .Python
 build/
