@@ -2,13 +2,22 @@ import logging
 import os
 import time
 import requests
+import json
 from sqlalchemy.orm import Session
 from model.models import ProductDescription
 from dto.product import ProductDescriptionResponse
 
 logger = logging.getLogger(__name__)
 
-def generate_description_and_save(product_name: str, user_id: int, db: Session) -> ProductDescriptionResponse:
+def generate_description_and_save(
+    product_name: str,
+    category: str,
+    price: int,
+    keywords: list,
+    tone: str,
+    user_id: int,
+    db: Session
+) -> ProductDescriptionResponse:
     api_key = os.getenv('RUNPOD_API_KEY')
     api_id = os.getenv('RUNPOD_ENDPOINT_ID')
 
@@ -21,7 +30,15 @@ def generate_description_and_save(product_name: str, user_id: int, db: Session) 
         'Authorization': f'Bearer {api_key}'
     }
 
-    prompt = f"다음 키워드를 포함하여 고객에게 매력적인 상품 설명을 작성하세요.{product_name}"
+    prompt = (
+        f"당신은 상품생성 전문가입니다. 아래 조합에 따라 알맞는 상품명을 생성해주세요."
+        f"상품명: {product_name}\n"
+        f"카테고리: {category}\n"
+        f"가격: {price}원\n"
+        f"핵심 키워드: {', '.join(keywords)}\n"
+        f"작성 톤: {tone}\n\n"
+    )
+
     logger.info(f"프롬프트 생성됨: {prompt}")
     payload = {"input": {"text": prompt}}
     url = f"https://api.runpod.ai/v2/{api_id}/run"
@@ -31,9 +48,13 @@ def generate_description_and_save(product_name: str, user_id: int, db: Session) 
     def save_and_return(desc: str):
         db_desc = ProductDescription(
             product_name=product_name,
+            category=category,
+            price=price,
+            keywords=json.dumps(keywords),
+            tone=tone,
             generated_description=desc,
-            user_id=user_id,
-            input_prompt=prompt
+            input_prompt=prompt,
+            user_id=user_id
         )
         db.add(db_desc)
         db.commit()

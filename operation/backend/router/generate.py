@@ -1,6 +1,6 @@
 from dto.product import ProductDescriptionRequest, ProductDescriptionResponse, ProductImageRequest, ProductImageResponse
 from service.product_description_service import generate_description_and_save
-from service.product_image_service import generate_image
+from service.product_image_service import generate_and_save_image
 from fastapi import APIRouter, Body, Request, HTTPException
 from dotenv import load_dotenv
 import logging
@@ -26,12 +26,17 @@ def generate_product_description(
 
     validate_csrf(raw_request) # CSRF 검증
 
-    return generate_description_and_save(request.product_name, current_user["id"], db)
+    return generate_description_and_save(
+        **request.dict(),
+        user_id=current_user["id"],
+        db=db
+    )
 
 @router.post("/image", response_model=ProductImageResponse)
 def generate_product_image(
     request: ProductImageRequest = Body(...),
     current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
     raw_request: Request = None
 ) -> ProductImageResponse:
     """
@@ -39,11 +44,11 @@ def generate_product_image(
     """
     try:
         validate_csrf(raw_request)  # CSRF 검증
-        
+
         logger.info(f"사용자 {current_user['id']}가 제품 '{request.product_name}'에 대한 이미지 생성을 요청했습니다.")
-        
+
         # 이미지 생성
-        result = generate_image(request.product_name)
+        result = generate_and_save_image(request.product_name, current_user["id"], db)
         
         logger.info("이미지 생성 완료 (base64 형태)")
         

@@ -37,5 +37,7 @@ ENV TOKENIZERS_PARALLELISM=false
 ENV TRANSFORMERS_CACHE=/app/hf_cache
 # 캐시 디렉토리 생성
 RUN mkdir -p /app/hf_cache
+
 # 컨테이너 시작 명령
+
 CMD ["python", "main.py"]

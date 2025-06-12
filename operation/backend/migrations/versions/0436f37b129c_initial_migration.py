@@ -1,8 +1,8 @@
-"""Generate to  Member
+"""initial migration
 
-Revision ID: 0711a6461b36
+Revision ID: 0436f37b129c
 Revises: 
-Create Date: 2025-06-01 18:47:04.058003
+Create Date: 2025-06-12 12:59:12.630840
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0711a6461b36'
+revision: str = '0436f37b129c'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,17 +27,37 @@ def upgrade() -> None:
     sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('username', sa.String(length=255), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
     op.create_index(op.f('ix_members_id'), 'members', ['id'], unique=False)
+    op.create_table('generated_images',
+    sa.Column('id', sa.BigInteger(), nullable=False),
+    sa.Column('user_id', sa.BigInteger(), nullable=False),
+    sa.Column('product_name_ko', sa.String(length=200), nullable=False),
+    sa.Column('product_name_en', sa.String(length=200), nullable=False),
+    sa.Column('prompt_used', sa.Text(), nullable=True),
+    sa.Column('file_url', sa.String(length=500), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['members.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_generated_images_id'), 'generated_images', ['id'], unique=False)
+    op.create_index(op.f('ix_generated_images_product_name_en'), 'generated_images', ['product_name_en'], unique=False)
+    op.create_index(op.f('ix_generated_images_product_name_ko'), 'generated_images', ['product_name_ko'], unique=False)
+    op.create_index(op.f('ix_generated_images_user_id'), 'generated_images', ['user_id'], unique=False)
     op.create_table('product_descriptions',
     sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('product_name', sa.String(length=255), nullable=False),
+    sa.Column('input_prompt', sa.Text(), nullable=False),
     sa.Column('generated_description', sa.Text(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('category', sa.String(length=255), nullable=True),
+    sa.Column('price', sa.Integer(), nullable=True),
+    sa.Column('keywords', sa.Text(), nullable=True),
+    sa.Column('tone', sa.String(length=100), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['members.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -73,6 +93,11 @@ def downgrade() -> None:
     op.drop_table('reports')
     op.drop_index(op.f('ix_product_descriptions_id'), table_name='product_descriptions')
     op.drop_table('product_descriptions')
+    op.drop_index(op.f('ix_generated_images_user_id'), table_name='generated_images')
+    op.drop_index(op.f('ix_generated_images_product_name_ko'), table_name='generated_images')
+    op.drop_index(op.f('ix_generated_images_product_name_en'), table_name='generated_images')
+    op.drop_index(op.f('ix_generated_images_id'), table_name='generated_images')
+    op.drop_table('generated_images')
     op.drop_index(op.f('ix_members_id'), table_name='members')
     op.drop_table('members')
     # ### end Alembic commands ###

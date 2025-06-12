@@ -16,6 +16,7 @@ from core.security import (
     is_refresh_token_valid
 )
 from utils.pymongo import get_token_collection
+from model.models import Member  # ensure this import exists near the top
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -29,9 +30,12 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db)):
-    user = authenticate_user(db, user_data.email, user_data.password)
+    user = db.query(Member).filter_by(email=user_data.email).first()
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=404, detail="없는 유저 입니다.")
+
+    if not authenticate_user(db, user_data.email, user_data.password):
+        raise HTTPException(status_code=400, detail="비밀번호 검증 실패")
 
     access_token = create_access_token(
         user_id=str(user.id),

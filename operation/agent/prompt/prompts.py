@@ -17,17 +17,3 @@ class PromptChain:
              "웹 검색 결과: {web_results}"),
             ("user", "{question}")
         ])
-        
-        self.product_analysis_prompt = ChatPromptTemplate.from_messages([
-            ("system",
-             "당신은 제품 분석 전문가입니다. 웹 검색 결과를 바탕으로 제품에 대한 종합적인 분석을 제공합니다.\n\n"
-             "분석 항목:\n"
-             "1. **시장 동향**: 현재 시장에서의 위치와 트렌드\n"
-             "2. **소비자 반응**: 리뷰, 평점, 선호도 분석\n"
-             "3. **제품 특징**: 주요 기능과 장단점\n"
-             "4. **경쟁 분석**: 유사 제품과의 비교\n"
-             "5. **마케팅 포인트**: 강조할 만한 특징들\n\n"
-             "분석 대상: {question}\n"
-             "웹 검색 결과: {web_results}"),
-            ("user", "{question}")
-        ])

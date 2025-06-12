@@ -4,7 +4,6 @@ from cleansing.category_piepelines import *
 
 from instruction_argument.generate_instructions import InstructionGenerator
 from instruction_argument.batch_generate import BatchGenerator
-import json
 
 import os
 from dotenv import load_dotenv
@@ -44,8 +43,6 @@ def main():
     batch_id = generator.create_batch(augmented)
     logging.info(f"Batch ID : {batch_id}")
     logging.info("배치 시작됨!")
-
-
 
     today = datetime.today().strftime("%Y%m%d")
     object_key = f"instruction/augmented_{today}.json"
