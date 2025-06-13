@@ -8,7 +8,6 @@ from router.generate import router as generated_router
 
 app = FastAPI(
     title="Shop Lingo API",
-    root_path="/v1",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json"
