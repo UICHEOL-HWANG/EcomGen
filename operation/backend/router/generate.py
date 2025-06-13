@@ -1,7 +1,6 @@
-from dto.product import ProductImageCallbackRequest
 from model.models import GeneratedImage
 from utils.storage import CustomUpload
-from dto.product import CombinedProductRequest, CombinedProductResponse
+from dto.product import CombinedProductRequest, CombinedProductResponse, ProductImageCallbackRequest
 from service.product_description_service import generate_description_and_save
 from fastapi import APIRouter, Body, Request, HTTPException
 from dotenv import load_dotenv

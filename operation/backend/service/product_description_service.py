@@ -5,16 +5,12 @@ import requests
 import json
 from sqlalchemy.orm import Session
 from model.models import ProductDescription
-from dto.product import ProductDescriptionResponse
+from dto.product import ProductDescriptionResponse, ProductDescriptionRequest
 
 logger = logging.getLogger(__name__)
 
 def generate_description_and_save(
-    product_name: str,
-    category: str,
-    price: int,
-    keywords: list,
-    tone: str,
+    request: ProductDescriptionRequest,
     user_id: int,
     db: Session
 ) -> ProductDescriptionResponse:
@@ -32,11 +28,11 @@ def generate_description_and_save(
 
     prompt = (
         f"당신은 상품생성 전문가입니다. 아래 조합에 따라 알맞는 상품명을 생성해주세요."
-        f"상품명: {product_name}\n"
-        f"카테고리: {category}\n"
-        f"가격: {price}원\n"
-        f"핵심 키워드: {', '.join(keywords)}\n"
-        f"작성 톤: {tone}\n\n"
+        f"상품명: {request.product_name}\n"
+        f"카테고리: {request.category}\n"
+        f"가격: {request.price}원\n"
+        f"핵심 키워드: {', '.join(request.keywords)}\n"
+        f"작성 톤: {request.tone}\n\n"
     )
 
     logger.info(f"프롬프트 생성됨: {prompt}")
@@ -47,11 +43,11 @@ def generate_description_and_save(
 
     def save_and_return(desc: str):
         db_desc = ProductDescription(
-            product_name=product_name,
-            category=category,
-            price=price,
-            keywords=json.dumps(keywords),
-            tone=tone,
+            product_name=request.product_name,
+            category=request.category,
+            price=request.price,
+            keywords=json.dumps(request.keywords),
+            tone=request.tone,
             generated_description=desc,
             input_prompt=prompt,
             user_id=user_id
