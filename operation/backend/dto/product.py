@@ -1,18 +1,8 @@
 from pydantic import BaseModel
 
-class ProductDescriptionRequest(BaseModel):
+class CombinedProductRequest(BaseModel):
     product_name: str
-    category: str
-    price: int
-    keywords: list[str]
-    tone: str
 
-class ProductDescriptionResponse(BaseModel):
+class CombinedProductResponse(BaseModel):
     description: str
-
-class ProductImageRequest(BaseModel):
-    product_name: str
-
-class ProductImageResponse(BaseModel):
-    image_base64: str
-    message: str
+    image_message: str
