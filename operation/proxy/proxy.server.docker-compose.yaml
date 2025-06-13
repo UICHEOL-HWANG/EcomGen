@@ -5,10 +5,9 @@ services:
       context: .
       dockerfile: proxy.Dockerfile 
     ports:
-    - "80:80"
-  
-  networks:
-    - shoplingo 
+      - "80:80"
+    networks:
+      - shoplingo 
 
 networks:
   shoplingo:
