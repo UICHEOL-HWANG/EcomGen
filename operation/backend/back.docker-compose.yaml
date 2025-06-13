@@ -1,5 +1,6 @@
 services:
   web:
+    container_name: web
     image: ${GAR_CONTAINER}
     volumes:
       - ./:/usr/src/app
