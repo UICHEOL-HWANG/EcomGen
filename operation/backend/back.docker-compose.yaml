@@ -1,0 +1,15 @@
+services:
+  web:
+    image: ${GAR_CONTAINER}
+    volumes:
+      - ./:/usr/src/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    networks:
+      - shoplingo
+
+networks:
+  shoplingo:
+    external: true
