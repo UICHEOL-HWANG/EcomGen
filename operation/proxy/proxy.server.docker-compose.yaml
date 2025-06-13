@@ -1,0 +1,15 @@
+services:
+  nginx:
+    container_name: backend.proxy
+    build: 
+      context: .
+      dockerfile: proxy.Dockerfile 
+    ports:
+    - "80:80"
+  
+  networks:
+    - shoplingo 
+
+networks:
+  shoplingo:
+    external: true

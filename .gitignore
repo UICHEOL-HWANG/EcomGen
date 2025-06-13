@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+operation/backend/cheorish-lab-08181390c2f3.json
+
 # Node.js
 node_modules/
 dist/
