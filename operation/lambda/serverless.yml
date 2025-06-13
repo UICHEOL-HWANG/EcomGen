@@ -1,0 +1,7 @@
+service: image-generator-lambda 
+
+provider:
+  name: aws 
+  runtime: python3.11
+  region: ap-northeast-2
+  
