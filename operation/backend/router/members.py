@@ -96,10 +96,6 @@ def change_password(
         password_data.new_password
     )
 
-
-
-
-
 # Upload profile picture route
 @router.post("/upload-profile", response_model=dict)
 def upload_profile_picture(
