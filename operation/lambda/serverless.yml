@@ -4,4 +4,36 @@ provider:
   name: aws 
   runtime: python3.11
   region: ap-northeast-2
-  
+  timeout: 90
+  memorySize: 512
+  environment:
+    RUNPOD_API_KEY: ${env:RUNPOD_API_KEY}
+    RUNPOD_IMAGE_ENDPOINT_ID: ${env:RUNPOD_IMAGE_ENDPOINT_ID}
+
+functions:
+  generateImage:
+    handler: generate_image.lambda_handler
+    events:
+      - http:
+          path: image/callback
+          method: post
+          cors: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    zip: true
+    slim: true
+    noDeploy:
+      - boto3
+      - botocore
+
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
+    - tests/**
+    - __pycache__/**
