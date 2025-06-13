@@ -1,6 +1,6 @@
 # pip Modules
 from datetime import datetime
-from http.client import HTTPException
+from fastapi import HTTPException, UploadFile, File
 
 from fastapi import Cookie
 from fastapi import APIRouter, Depends, Request, status
@@ -15,17 +15,31 @@ from dto.user import UserUpdate, UserOut, PasswordChange
 from service.member_service import update_user_info, delete_user, change_user_password
 from service.profile_upload_service import handle_profile_picture_upload, delete_profile_picture
 
-from dto.profile import ProfileUploadRequest
+
 
 router = APIRouter(prefix="/member", tags=["member"])
 
 @router.get("/me", response_model=UserOut, status_code=status.HTTP_200_OK)
 def read_my_info(
     request: Request,
+    db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     validate_csrf(request)
-    return current_user
+    
+    # 데이터베이스에서 최신 사용자 정보 가져오기 (profile_pic 포함)
+    user = db.query(Member).filter(Member.id == current_user["id"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # UserOut 형식으로 반환 (profile_pic 경로 포함)
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "created_at": user.created_at,
+        "profile_pic": user.profile_pic  # 프로필 사진 경로 포함
+    }
 
 @router.put("/update_account", response_model=dict, status_code=status.HTTP_200_OK)
 def update_my_info(
@@ -83,15 +97,18 @@ def change_password(
     )
 
 
+
+
+
 # Upload profile picture route
 @router.post("/upload-profile", response_model=dict)
 def upload_profile_picture(
     request: Request,
-    data: ProfileUploadRequest,
+    file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     validate_csrf(request)
-    return handle_profile_picture_upload(current_user["id"], data.base64_data)
+    return handle_profile_picture_upload(current_user["id"], file)
 
 
 @router.delete("/delete-profile", response_model=dict)

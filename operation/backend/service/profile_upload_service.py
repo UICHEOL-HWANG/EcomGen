@@ -1,17 +1,20 @@
-import base64
 from fastapi import HTTPException
-from datetime import datetime
-from typing import Optional
+from fastapi import UploadFile, File
+import base64
 
 from model.database import SessionLocal
 from model.models import Member
 from utils.storage import CustomUpload
 
-def handle_profile_picture_upload(user_id: str, base64_data: str) -> dict:
+def handle_profile_picture_upload(user_id: str, file: UploadFile) -> dict:
     db = SessionLocal()
     uploader = CustomUpload()
 
     try:
+        # 파일 읽고 base64 인코딩
+        file_bytes = file.file.read()
+        base64_data = base64.b64encode(file_bytes).decode("utf-8")
+
         # S3에 업로드
         upload_result = uploader.upload_profile_picture(base64_data, user_id)
 

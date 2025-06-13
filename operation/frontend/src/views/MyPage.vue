@@ -6,8 +6,8 @@
         <div class="relative w-20 h-20 mx-auto mb-4">
           <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
             <img 
-              v-if="userStore.user?.profile_image" 
-              :src="userStore.user.profile_image" 
+              v-if="userStore.user?.profile_pic" 
+              :src="userStore.user.profile_pic" 
               alt="Profile" 
               class="w-full h-full object-cover"
             />
@@ -61,7 +61,10 @@
       </button>
 
       <!-- 내가 만든 상품 -->
-      <button class="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition">
+      <button 
+        @click="goToMyProducts"
+        class="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition"
+      >
         <div class="flex items-center gap-3">
           <span class="text-lg">📦</span>
           <div class="text-left">
@@ -73,7 +76,10 @@
       </button>
 
       <!-- 내가 검색한 리포트 -->
-      <button class="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition">
+      <button 
+        @click="goToMyReports"
+        class="w-full bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:bg-gray-50 transition"
+      >
         <div class="flex items-center gap-3">
           <span class="text-lg">📈</span>
           <div class="text-left">
@@ -315,8 +321,8 @@
           <div class="text-center mb-6">
             <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 overflow-hidden">
               <img 
-                v-if="userStore.user?.profile_image" 
-                :src="userStore.user.profile_image" 
+                v-if="userStore.user?.profile_pic" 
+                :src="userStore.user.profile_pic" 
                 alt="Profile" 
                 class="w-full h-full object-cover"
               />
@@ -347,7 +353,7 @@
             
             <button 
               @click="handleDeleteProfileImage"
-              :disabled="userStore.loading || !userStore.user?.profile_image"
+              :disabled="userStore.loading || !userStore.user?.profile_pic"
               class="w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
             >
               <span>🗑️</span>
@@ -527,6 +533,16 @@ const handleRelogin = async () => {
   }
 }
 
+// 내가 만든 상품 페이지로 이동
+const goToMyProducts = () => {
+  router.push('/my-products')
+}
+
+// 내가 검색한 리포트 페이지로 이동
+const goToMyReports = () => {
+  router.push('/my-reports')
+}
+
 // 갤러리에서 사진 선택
 const handleGallerySelect = () => {
   const input = document.createElement('input')
@@ -568,10 +584,8 @@ const uploadProfileImageFile = async (file) => {
     
     const response = await uploadProfileImage(file)
     
-    // 사용자 정보 업데이트
-    userStore.updateUserInfo({
-      profile_image: response.profile_image_url
-    })
+    // 사용자 정보 새로 가져오기 (데이터베이스에서 최신 정보 동기화)
+    await userStore.fetchUserInfo()
     
     showProfileImageModal.value = false
     showSuccessModal.value = true
@@ -594,10 +608,8 @@ const handleDeleteProfileImage = async () => {
     
     await deleteProfileImage()
     
-    // 사용자 정보에서 프로필 사진 제거
-    userStore.updateUserInfo({
-      profile_image: null
-    })
+    // 사용자 정보 새로 가져오기 (데이터베이스에서 최신 정보 동기화)
+    await userStore.fetchUserInfo()
     
     showProfileImageModal.value = false
     showSuccessModal.value = true

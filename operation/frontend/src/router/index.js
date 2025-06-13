@@ -6,6 +6,8 @@ import Signup from '@/views/Signup.vue'
 import MyPage from '@/views/MyPage.vue'
 import Generate from '@/views/Generate.vue'
 import RecommendedProducts from '@/views/RecommendedProducts.vue'
+import MyProducts from '@/views/MyProducts.vue'
+import MyReports from '@/views/MyReports.vue'
 
 const routes = [
   {
@@ -39,6 +41,18 @@ const routes = [
     path: '/recommended-products',
     name: 'RecommendedProducts',
     component: RecommendedProducts
+  },
+  {
+    path: '/my-products',
+    name: 'MyProducts',
+    component: MyProducts,
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
+    path: '/my-reports',
+    name: 'MyReports',
+    component: MyReports,
+    meta: { requiresAuth: true } // 인증 필요
   },
 ]
 

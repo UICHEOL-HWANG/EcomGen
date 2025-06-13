@@ -100,7 +100,7 @@ export const uploadProfileImage = async (file) => {
 // 프로필 이미지 삭제
 export const deleteProfileImage = async () => {
   try {
-    const response = await axios.delete('/member/profile-image')
+    const response = await axios.delete('/member/delete-profile')
     return response.data
   } catch (error) {
     throw error.response?.data || error.message
