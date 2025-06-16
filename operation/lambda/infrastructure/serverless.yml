@@ -1,0 +1,81 @@
+service: ecomgen-infrastructure
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ap-northeast-2
+  stage: v1
+  profile: cheorish-admin
+
+resources:
+  Resources:
+    # 텍스트 생성용 SQS 큐
+    TextGenerationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-text-generation-queue
+        MessageRetentionPeriod: 1209600  # 14일
+        VisibilityTimeout: 900    # 15분 (Lambda timeout과 동일)
+        ReceiveMessageWaitTimeSeconds: 20  # Long polling
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt TextGenerationDLQ.Arn
+          maxReceiveCount: 3
+
+    # 텍스트 생성 실패시 DLQ
+    TextGenerationDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-text-generation-dlq
+        MessageRetentionPeriod: 1209600
+
+    # 이미지 생성용 SQS 큐
+    ImageGenerationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-image-generation-queue
+        MessageRetentionPeriod: 1209600  # 14일
+        VisibilityTimeout: 900    # 15분 (Lambda timeout과 동일)
+        ReceiveMessageWaitTimeSeconds: 20  # Long polling
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ImageGenerationDLQ.Arn
+          maxReceiveCount: 3
+
+    # 이미지 생성 실패시 DLQ
+    ImageGenerationDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-image-generation-dlq
+        MessageRetentionPeriod: 1209600
+
+  Outputs:
+    TextGenerationQueueUrl:
+      Description: "텍스트 생성 SQS 큐 URL"
+      Value: !Ref TextGenerationQueue
+      Export:
+        Name: ${self:provider.stage}-TextGenerationQueueUrl
+
+    TextGenerationQueueArn:
+      Description: "텍스트 생성 SQS 큐 ARN"
+      Value: !GetAtt TextGenerationQueue.Arn
+      Export:
+        Name: ${self:provider.stage}-TextGenerationQueueArn
+
+    ImageGenerationQueueUrl:
+      Description: "이미지 생성 SQS 큐 URL"
+      Value: !Ref ImageGenerationQueue
+      Export:
+        Name: ${self:provider.stage}-ImageGenerationQueueUrl
+
+    ImageGenerationQueueArn:
+      Description: "이미지 생성 SQS 큐 ARN"
+      Value: !GetAtt ImageGenerationQueue.Arn
+      Export:
+        Name: ${self:provider.stage}-ImageGenerationQueueArn
+
+    TextDLQUrl:
+      Description: "텍스트 생성 DLQ URL"
+      Value: !Ref TextGenerationDLQ
+
+    ImageDLQUrl:
+      Description: "이미지 생성 DLQ URL"
+      Value: !Ref ImageGenerationDLQ

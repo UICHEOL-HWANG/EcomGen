@@ -19,6 +19,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173", 
         "http://127.0.0.1:5173",
+        "https://shop-lingo.store"
     ],
     allow_credentials=True,  # 쿠키 전송 허용
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],

@@ -164,7 +164,7 @@
         
         <div v-if="generatedImage" class="text-center">
           <img
-            :src="`data:image/png;base64,${generatedImage}`"
+            :src="generatedImage.startsWith('http') ? generatedImage : `data:image/png;base64,${generatedImage}`"
             :alt="productForm.product_name"
             class="w-full max-w-sm mx-auto rounded-lg border border-gray-200 shadow-sm"
           />
@@ -232,10 +232,9 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store/userStore'
+import { generateProductAndWait } from '@/api/generate.js'
 
 const router = useRouter()
-const userStore = useUserStore()
 
 // 현재 단계
 const currentStep = ref(1)
@@ -293,6 +292,7 @@ const loadingProgress = ref(0)
 // 생성 결과
 const generatedImage = ref('')
 const generatedDescription = ref('')
+const currentJobId = ref('')
 
 // 키워드 추가
 const addKeyword = () => {
@@ -308,7 +308,6 @@ const removeKeyword = (index) => {
   productForm.keywords.splice(index, 1)
 }
 
-// 상품 생성 프로세스
 const handleGenerateProduct = async () => {
   errorMessage.value = ''
   
@@ -321,63 +320,55 @@ const handleGenerateProduct = async () => {
   loading.value = true
   loadingProgress.value = 0
   currentStep.value = 2
+  imageLoading.value = true
+  descriptionLoading.value = true
 
   try {
-    // 1. 이미지 생성
-    loadingMessage.value = '상품 이미지를 생성하고 있습니다...'
-    loadingProgress.value = 20
-    imageLoading.value = true
+    // 실제 API 호출
+    const result = await generateProductAndWait(productForm, (progress) => {
+      loadingMessage.value = progress.message
+      loadingProgress.value = progress.progress
+      
+      // 단계별 로딩 상태 업데이트
+      if (progress.step === 'processing') {
+        if (progress.progress >= 50) {
+          loadingMessage.value = '이미지를 생성하고 있습니다...'
+        } else {
+          loadingMessage.value = '설명을 생성하고 있습니다...'
+        }
+      }
+    })
     
-    // TODO: 실제 이미지 생성 API 호출
-    await generateImage()
+    currentJobId.value = result.jobId
     
-    imageLoading.value = false
-    loadingProgress.value = 60
+    // 텍스트 결과 처리
+    if (result.textData && result.textData.description) {
+      generatedDescription.value = result.textData.description
+      descriptionLoading.value = false
+    }
     
-    // 2. 설명 생성
-    loadingMessage.value = '상품 설명을 작성하고 있습니다...'
-    descriptionLoading.value = true
-    
-    // TODO: 실제 설명 생성 API 호출
-    await generateDescription()
-    
-    descriptionLoading.value = false
-    loadingProgress.value = 100
+    // 이미지 결과 처리  
+    if (result.imageData && result.imageData.file_url) {
+      // S3 URL을 직접 사용
+      generatedImage.value = result.imageData.file_url
+      imageLoading.value = false
+    }
     
     loadingMessage.value = '생성 완료!'
+    loadingProgress.value = 100
     
     setTimeout(() => {
       loading.value = false
     }, 1000)
     
   } catch (error) {
+    console.error('생성 실패:', error)
     loading.value = false
     imageLoading.value = false
     descriptionLoading.value = false
     errorMessage.value = error.message || '생성 중 오류가 발생했습니다.'
     currentStep.value = 1
   }
-}
-
-// 이미지 생성 (TODO: 실제 API 연동)
-const generateImage = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // 임시 base64 이미지 (실제로는 API에서 받아옴)
-      generatedImage.value = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-      resolve()
-    }, 2000)
-  })
-}
-
-// 설명 생성 (TODO: 실제 API 연동)
-const generateDescription = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      generatedDescription.value = `${productForm.product_name}은/는 ${productForm.category} 카테고리의 대표적인 상품입니다.\n\n고품질 소재로 제작되어 내구성이 뛰어나며, 세련된 디자인으로 어떤 스타일에도 잘 어울립니다.\n\n가격: ${productForm.price?.toLocaleString()}원\n\n${productForm.keywords.length > 0 ? `주요 특징: ${productForm.keywords.join(', ')}` : ''}`
-      resolve()
-    }, 1500)
-  })
 }
 
 // 상품 저장 (TODO: 실제 API 연동)
@@ -408,5 +399,6 @@ const resetForm = () => {
   generatedImage.value = ''
   generatedDescription.value = ''
   errorMessage.value = ''
+  currentJobId.value = ''
 }
 </script>

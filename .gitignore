@@ -6,6 +6,16 @@ __pycache__/
 # C extensions
 *.so
 
+operation/lambda/image/.serverless
+operation/lambda/image/.requirements.zip
+
+operation/lambda/text/.serverless
+operation/lambda/text/.requirements.zip
+
+operation/lambda/infrastructure/.serverless
+
+
+
 operation/backend/cheorish-lab-08181390c2f3.json
 
 # Node.js
@@ -48,29 +58,8 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-<<<<<<< HEAD
-MANIFESTw
-
-ollama/Llama-gguf/Llama-3-Open-Ko-8B-Q4_0.gguf
-=======
-MANIFEST
-
-ollama/Llama-3-Open-Ko-8B-Q4_0.gguf
->>>>>>> origin/main
-model/Polyglot-ko-1.3b/results
-model/Polyglot-ko-1.3b/merged_polyglot
-
-model/gemma2-ko-2b/results
 
 
-model/data/data_sets.json
-model/data/train.csv
-
-model/KoGPT2-v1/output_dir
-model/KoGPT2-v1/results
-
-model/solar-v1/output_dir
-model/solar-v1/results
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
