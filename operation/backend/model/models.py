@@ -23,6 +23,7 @@ class ProductDescription(Base):
     __tablename__ = "product_descriptions"
 
     id = Column(BigInteger, primary_key=True, index=True)
+    job_id = Column(String(36), index=True, nullable=True)  # 추가: UUID 작업 ID
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
     product_name = Column(String(255), nullable=False)
     input_prompt = Column(Text, nullable=False)
@@ -39,6 +40,7 @@ class GeneratedImage(Base):
     __tablename__ = "generated_images"
 
     id = Column(BigInteger, primary_key=True, index=True)
+    job_id = Column(String(36), index=True, nullable=True)  # 추가: UUID 작업 ID
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # 제품 정보
@@ -66,4 +68,3 @@ class Report(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("Member", back_populates="reports")
-

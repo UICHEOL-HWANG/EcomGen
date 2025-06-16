@@ -1,0 +1,80 @@
+service: image-generator
+
+provider:
+  name: aws 
+  runtime: python3.11
+  profile: cheorish-admin
+  stage: v1
+  region: ap-northeast-2
+  timeout: 900  # 런팟 콜드스타트 고려해서 15분 (최대값)
+  memorySize: 256  # requests만 사용하므로 최소 메모리
+  environment:
+    RUNPOD_API_KEY: ${env:RUNPOD_API_KEY}
+    RUNPOD_IMAGE_ENDPOINT_ID: ${env:RUNPOD_IMAGE_ENDPOINT_ID}
+    FASTAPI_IMAGE_CALLBACK_URL: ${env:FASTAPI_IMAGE_CALLBACK_URL}
+    # SQS 관련 환경변수 추가
+    SQS_IMAGE_QUEUE_URL: ${env:SQS_IMAGE_QUEUE_URL}
+    # DeepL 번역 API
+    DEEPL_URL: ${env:DEEPL_URL}
+    DEEPL_AUTH_KEY: ${env:DEEPL_AUTH_KEY}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:ReceiveMessage
+        - sqs:DeleteMessage
+        - sqs:GetQueueAttributes
+      Resource: 
+        - ${env:SQS_IMAGE_QUEUE_ARN}
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+
+functions:
+  generateImage:
+    handler: generate_image.lambda_handler
+    layers:
+      - {Ref: PythonRequirementsLambdaLayer}
+    events:
+      - sqs:
+          arn: ${env:SQS_IMAGE_QUEUE_ARN}
+          batchSize: 1  # 한 번에 하나씩 처리
+    
+  # HTTP 엔드포인트는 테스트용으로만 사용
+  imageGeneratorTest:
+    handler: generate_image.http_handler
+    layers:
+      - {Ref: PythonRequirementsLambdaLayer}
+    events:
+      - http:
+          path: image/generate
+          method: post
+          cors: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    layer: true
+    dockerizePip: false
+    zip: true
+    noDeploy: []
+
+package:
+  individually: false
+  exclude:
+    - node_modules/**
+    - .venv/**
+    - tests/**
+    - __pycache__/**
+    - "*.pyc"
+    - ".pytest_cache/**"
+    - ".git/**"
+    - "README.md"
+    - ".env*"
+  include:
+    - generate_image.py
+    - requirements.txt
