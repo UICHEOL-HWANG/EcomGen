@@ -54,10 +54,11 @@ def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db
         "created_at": datetime.utcnow()
     })
 
-    set_token_cookies(response, access_token, refresh_token, csrf_token)
+    set_token_cookies(response, access_token, refresh_token)
 
     return {
         "message": "Login successful",
+        "csrf_token": csrf_token
     }
 
 @router.post("/logout")
@@ -84,7 +85,6 @@ def logout(request: Request, response: Response):
         })
 
     clear_token_cookies(response)
-    response.delete_cookie("csrf_token")
     return {"message": "Logged out"}
 
 @router.post("/refresh")
@@ -110,7 +110,10 @@ def refresh_token(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Refresh token is invalid or revoked")
 
     new_access_token = create_access_token(user_id)
-    csrf_token = request.cookies.get("csrf_token") or secrets.token_hex(16)
+    csrf_token = secrets.token_hex(16)  # 새로운 CSRF 토큰 생성
 
-    set_token_cookies(response, new_access_token, refresh_token, csrf_token)
-    return {"message": "Access token refreshed"}
+    set_token_cookies(response, new_access_token, refresh_token)
+    return {
+        "message": "Access token refreshed",
+        "csrf_token": csrf_token
+    }

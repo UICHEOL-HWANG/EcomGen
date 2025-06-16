@@ -34,14 +34,14 @@ def create_refresh_token(user_id: str) -> str:
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
-# 쿠키 세팅
-def set_token_cookies(response: Response, access_token: str, refresh_token: str, csrf_token: Optional[str] = None):
+# 쿠키 세팅 (CSRF 토큰은 Response Body로 전달)
+def set_token_cookies(response: Response, access_token: str, refresh_token: str):
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",  # 크로스 도메인 필수!
         max_age=settings.access_token_expire.seconds
     )
     response.set_cookie(
@@ -49,18 +49,9 @@ def set_token_cookies(response: Response, access_token: str, refresh_token: str,
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="strict",
+        samesite="none",  # 크로스 도메인 필수!
         max_age=settings.refresh_token_expire.total_seconds()
     )
-    if csrf_token:
-        response.set_cookie(
-            key="csrf_token",
-            value=csrf_token,
-            httponly=False,
-            secure=True,
-            samesite="lax",
-            max_age=settings.access_token_expire.seconds
-        )
 
 # 쿠키 제거
 def clear_token_cookies(response: Response):
@@ -104,9 +95,10 @@ def is_refresh_token_valid(token: str, user_id: str) -> bool:
     return token_doc is not None
 
 
-# CSRF 토큰 검증
+# CSRF 토큰 검증 (localStorage 방식)
 def validate_csrf(request: Request):
     csrf_token_header = request.headers.get("X-CSRF-Token")
-    csrf_token_cookie = request.cookies.get("csrf_token")
-    if not csrf_token_header or not csrf_token_cookie or csrf_token_header != csrf_token_cookie:
+    if not csrf_token_header:
         raise HTTPException(status_code=403, detail="CSRF token missing or invalid")
+    # 추가 검증 로직이 필요한 경우 여기에 추가
+    # 예: 데이터베이스에 저장된 CSRF 토큰과 비교
