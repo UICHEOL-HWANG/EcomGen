@@ -84,20 +84,22 @@ class ProductSearchService:
             # 응답 데이터 구성
             products = []
             for description, image, user in results:
-                # keywords JSON 파싱
+                # keywords JSON 파싱 (안전하게 처리)
                 keywords = []
                 if description.keywords:
                     try:
-                        keywords = json.loads(description.keywords)
-                    except json.JSONDecodeError:
-                        logger.warning(f"Failed to parse keywords for product {description.id}")
+                        parsed_keywords = json.loads(description.keywords)
+                        keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
+                    except (json.JSONDecodeError, TypeError):
+                        logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
                         keywords = []
                 
                 product_data = UserProductResponse(
                     id=description.id,
                     job_id=description.job_id,
                     product_name=description.product_name,
-                    username=user.name,
+                    username=user.username,
+                    profile_pic=user.profile_pic,
                     description=description.generated_description,
                     category=description.category,
                     price=description.price,
@@ -159,10 +161,14 @@ class ProductSearchService:
         """
         try:
             result = (
-                db.query(ProductDescription, GeneratedImage)
+                db.query(ProductDescription, GeneratedImage, Member)
                 .outerjoin(
                     GeneratedImage, 
                     ProductDescription.job_id == GeneratedImage.job_id
+                )
+                .join(
+                    Member,
+                    ProductDescription.user_id == Member.id
                 )
                 .filter(
                     ProductDescription.id == product_id,
@@ -174,21 +180,24 @@ class ProductSearchService:
             if not result:
                 return None
             
-            description, image = result
+            description, image, user = result
             
-            # keywords JSON 파싱
+            # keywords JSON 파싱 (안전하게 처리)
             keywords = []
             if description.keywords:
                 try:
-                    keywords = json.loads(description.keywords)
-                except json.JSONDecodeError:
-                    logger.warning(f"Failed to parse keywords for product {description.id}")
+                    parsed_keywords = json.loads(description.keywords)
+                    keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
+                except (json.JSONDecodeError, TypeError):
+                    logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
                     keywords = []
             
             return UserProductResponse(
                 id=description.id,
                 job_id=description.job_id,
                 product_name=description.product_name,
+                username=user.username,
+                profile_pic=user.profile_pic,
                 description=description.generated_description,
                 category=description.category,
                 price=description.price,
@@ -319,12 +328,14 @@ class ProductSearchService:
 
             products = []
             for description, image, user in results:
+                # keywords JSON 파싱 (안전하게 처리)
                 keywords = []
                 if description.keywords:
                     try:
-                        keywords = json.loads(description.keywords)
-                    except json.JSONDecodeError:
-                        logger.warning(f"Failed to parse keywords for product {description.id}")
+                        parsed_keywords = json.loads(description.keywords)
+                        keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
+                    except (json.JSONDecodeError, TypeError):
+                        logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
                         keywords = []
 
                 product_data = UserProductResponse(
@@ -332,6 +343,7 @@ class ProductSearchService:
                     job_id=description.job_id,
                     product_name=description.product_name,
                     username=user.username,
+                    profile_pic=user.profile_pic,
                     description=description.generated_description,
                     category=description.category,
                     price=description.price,

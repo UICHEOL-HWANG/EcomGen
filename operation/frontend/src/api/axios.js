@@ -16,28 +16,32 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const csrfToken = localStorage.getItem('csrf_token')
+    // CSRF 토큰을 매번 새로 가져오기 (안전한 접근)
+    let csrfToken = null
+    try {
+      csrfToken = sessionStorage.getItem('csrf_token')
+    } catch (e) {
+      // sessionStorage 접근 실패 시 무시
+    }
+    
     if (csrfToken) {
       config.headers['X-CSRF-Token'] = csrfToken
     }
     
     // 모바일만 Authorization 헤더 사용
     if (isMobile()) {
-      const accessToken = localStorage.getItem('access_token')
+      const accessToken = sessionStorage.getItem('access_token')
       if (accessToken) {
         config.headers['Authorization'] = `Bearer ${accessToken}`
-        console.log('[REQUEST] Mobile: Using Authorization header')
       }
       
       // refresh 요청일 때 X-Refresh-Token 헤더 추가 (모바일만)
       if (config.url === '/auth/refresh') {
-        const refreshToken = localStorage.getItem('refresh_token')
+        const refreshToken = sessionStorage.getItem('refresh_token')
         if (refreshToken) {
           config.headers['X-Refresh-Token'] = refreshToken
         }
       }
-    } else {
-      console.log('[REQUEST] Desktop: Using cookies only')
     }
     
     return config
@@ -66,12 +70,12 @@ axiosInstance.interceptors.response.use(
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url === '/auth/refresh') {
-        // 모바일만 localStorage 삭제
+        // 모바일만 sessionStorage 삭제
         if (isMobile()) {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
+          sessionStorage.removeItem('access_token')
+          sessionStorage.removeItem('refresh_token')
         }
-        localStorage.removeItem('csrf_token')
+        sessionStorage.removeItem('csrf_token')
         window.location.href = '/login'
         return Promise.reject(error)
       }
@@ -90,7 +94,7 @@ axiosInstance.interceptors.response.use(
       try {
         const refreshResponse = await axiosInstance.post('/auth/refresh')
         if (refreshResponse.data.csrf_token) {
-          localStorage.setItem('csrf_token', refreshResponse.data.csrf_token)
+          sessionStorage.setItem('csrf_token', refreshResponse.data.csrf_token)
         }
         
         processQueue(null, refreshResponse.data.csrf_token)
@@ -98,12 +102,12 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         
-        // 모바일만 localStorage 삭제
+        // 모바일만 sessionStorage 삭제
         if (isMobile()) {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
+          sessionStorage.removeItem('access_token')
+          sessionStorage.removeItem('refresh_token')
         }
-        localStorage.removeItem('csrf_token')
+        sessionStorage.removeItem('csrf_token')
         
         window.location.href = '/login'
         return Promise.reject(refreshError)

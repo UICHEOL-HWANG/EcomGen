@@ -108,7 +108,7 @@
             :disabled="loading"
             class="w-full py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 text-lg"
           >
-            {{ loading ? 'AI가 생성 중입니다...' : '🎨 AI로 상품 생성하기' }}
+            {{ loading ? 'AI가 생성 중...' : '🎨 AI로 상품 생성하기' }}
           </button>
         </div>
       </form>
@@ -123,17 +123,22 @@
           생성된 이미지
         </h3>
         
-        <div v-if="generatedImage" class="text-center">
+        <!-- 이미지 로딩 스켈레톤 -->
+        <div v-if="imageLoading" class="animate-pulse">
+          <div class="w-full max-w-sm mx-auto h-64 bg-gray-200 rounded-lg"></div>
+          <div class="text-center mt-4">
+            <div class="h-4 bg-gray-200 rounded w-48 mx-auto mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-32 mx-auto"></div>
+          </div>
+        </div>
+        
+        <!-- 생성된 이미지 -->
+        <div v-else-if="generatedImage" class="text-center">
           <img
             :src="generatedImage.startsWith('http') ? generatedImage : `data:image/png;base64,${generatedImage}`"
             :alt="productForm.product_name"
             class="w-full max-w-sm mx-auto rounded-lg border border-gray-200 shadow-sm"
           />
-        </div>
-        
-        <div v-else-if="imageLoading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p class="text-gray-600">이미지를 생성하고 있습니다...</p>
         </div>
       </div>
 
@@ -144,13 +149,18 @@
           상품 설명
         </h3>
         
-        <div v-if="generatedDescription" class="prose prose-sm">
-          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ generatedDescription }}</p>
+        <!-- 설명 로딩 스켈레톤 -->
+        <div v-if="descriptionLoading" class="animate-pulse space-y-3">
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
         
-        <div v-else-if="descriptionLoading" class="text-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p class="text-gray-600">설명을 생성하고 있습니다...</p>
+        <!-- 생성된 설명 -->
+        <div v-else-if="generatedDescription" class="prose prose-sm">
+          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ generatedDescription }}</p>
         </div>
       </div>
 
@@ -173,18 +183,12 @@
       </div>
     </section>
 
-    <!-- 로딩 오버레이 -->
+    <!-- 로딩 오버레이 (게이지바 제거된 버전) -->
     <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <h3 class="font-bold text-gray-900 mb-2">AI가 열심히 작업 중입니다</h3>
-        <p class="text-gray-600 text-sm mb-4">{{ loadingMessage }}</p>
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-1000"
-            :style="{ width: `${loadingProgress}%` }"
-          ></div>
-        </div>
+        <p class="text-gray-600 text-sm">상품을 생성하고 있습니다...</p>
       </div>
     </div>
   </div>
@@ -221,9 +225,6 @@ const descriptionLoading = ref(false)
 const saving = ref(false)
 const errorMessage = ref('')
 
-const loadingMessage = ref('')
-const loadingProgress = ref(0)
-
 // 생성 결과
 const generatedImage = ref('')
 const generatedDescription = ref('')
@@ -252,29 +253,23 @@ const handleGenerateProduct = async () => {
     return
   }
 
-  loading.value = true
-  loadingProgress.value = 0
+  // 즐시 2단계로 이동 + 로딩 상태 시작
   currentStep.value = 2
-  imageLoading.value = true
-  descriptionLoading.value = true
-
+  loading.value = true  // 모달 표시
+  imageLoading.value = true  // 스켈레톤 표시
+  descriptionLoading.value = true  // 스켈레톤 표시
+  
   try {
     // 실제 API 호출
     const result = await generateProductAndWait(productForm, (progress) => {
-      loadingMessage.value = progress.message
-      loadingProgress.value = progress.progress
-      
-      // 단계별 로딩 상태 업데이트
-      if (progress.step === 'processing') {
-        if (progress.progress >= 50) {
-          loadingMessage.value = '이미지를 생성하고 있습니다...'
-        } else {
-          loadingMessage.value = '설명을 생성하고 있습니다...'
-        }
-      }
+      // 진행 상황 로깅만 유지
+      console.log('생성 진행:', progress.message)
     })
     
     currentJobId.value = result.jobId
+    
+    // API 완료 후 모달 닫기
+    loading.value = false
     
     // 텍스트 결과 처리
     if (result.textData && result.textData.description) {
@@ -288,13 +283,6 @@ const handleGenerateProduct = async () => {
       generatedImage.value = result.imageData.file_url
       imageLoading.value = false
     }
-    
-    loadingMessage.value = '생성 완료!'
-    loadingProgress.value = 100
-    
-    setTimeout(() => {
-      loading.value = false
-    }, 1000)
     
   } catch (error) {
     console.error('생성 실패:', error)

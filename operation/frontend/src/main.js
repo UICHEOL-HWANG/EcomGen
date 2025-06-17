@@ -13,7 +13,8 @@ app.use(router)
 
 // 앱 시작 시 인증 상태 확인 (CSRF 토큰이 있을 때만)
 const userStore = useUserStore()
-const csrfToken = localStorage.getItem('csrf_token')
+const csrfToken = sessionStorage.getItem('csrf_token')
+
 if (csrfToken) {
   userStore.checkAuthStatus().finally(() => {
     app.mount('#app')

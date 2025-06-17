@@ -149,7 +149,7 @@ export const useUserStore = defineStore('user', {
     // 인증 상태 확인
     async checkAuthStatus() {
       // CSRF 토큰이 없으면 로그인되지 않은 상태로 간주
-      const csrfToken = localStorage.getItem('csrf_token')
+      const csrfToken = sessionStorage.getItem('csrf_token')
       if (!csrfToken) {
         this.isLoggedIn = false
         this.user = null
@@ -163,13 +163,13 @@ export const useUserStore = defineStore('user', {
         this.isLoggedIn = false
         this.user = null
         
-        // 모바일만 localStorage 삭제
+        // 모바일만 sessionStorage 삭제
         const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
         if (isMobile) {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
+          sessionStorage.removeItem('access_token')
+          sessionStorage.removeItem('refresh_token')
         }
-        localStorage.removeItem('csrf_token')
+        sessionStorage.removeItem('csrf_token')
       }
     },
     

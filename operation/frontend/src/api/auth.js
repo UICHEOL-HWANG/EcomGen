@@ -20,18 +20,18 @@ export const login = async (credentials) => {
   try {
     const response = await axios.post('/auth/login', credentials)
     
-    // 모바일만 localStorage에 저장
+    // 모바일만 sessionStorage에 저장
     if (isMobile() && response.data.access_token && response.data.refresh_token) {
-      localStorage.setItem('access_token', response.data.access_token)
-      localStorage.setItem('refresh_token', response.data.refresh_token)
-      console.log('[LOGIN] Mobile: tokens saved to localStorage')
+      sessionStorage.setItem('access_token', response.data.access_token)
+      sessionStorage.setItem('refresh_token', response.data.refresh_token)
+      console.log('[LOGIN] Mobile: tokens saved to sessionStorage')
     } else if (!isMobile()) {
       console.log('[LOGIN] Desktop: using cookies only')
     }
     
-    // CSRF 토큰은 모든 환경에서 localStorage 사용
+    // CSRF 토큰은 모든 환경에서 sessionStorage 사용
     if (response.data.csrf_token) {
-      localStorage.setItem('csrf_token', response.data.csrf_token)
+      sessionStorage.setItem('csrf_token', response.data.csrf_token)
     }
     
     return response.data
@@ -45,24 +45,24 @@ export const logout = async () => {
   try {
     const response = await axios.post('/auth/logout')
     
-    // 모바일만 localStorage 삭제
+    // 모바일만 sessionStorage 삭제
     if (isMobile()) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      console.log('[LOGOUT] Mobile: tokens removed from localStorage')
+      sessionStorage.removeItem('access_token')
+      sessionStorage.removeItem('refresh_token')
+      console.log('[LOGOUT] Mobile: tokens removed from sessionStorage')
     }
     
     // CSRF 토큰은 모든 환경에서 삭제
-    localStorage.removeItem('csrf_token')
+    sessionStorage.removeItem('csrf_token')
     
     return response.data
   } catch (error) {
     // 실패해도 토큰 삭제
     if (isMobile()) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
+      sessionStorage.removeItem('access_token')
+      sessionStorage.removeItem('refresh_token')
     }
-    localStorage.removeItem('csrf_token')
+    sessionStorage.removeItem('csrf_token')
     throw error.response?.data || error.message
   }
 }
@@ -73,7 +73,7 @@ export const refresh = async () => {
     const response = await axios.post('/auth/refresh')
     // CSRF 토큰 업데이트
     if (response.data.csrf_token) {
-      localStorage.setItem('csrf_token', response.data.csrf_token)
+      sessionStorage.setItem('csrf_token', response.data.csrf_token)
     }
     return response.data
   } catch (error) {

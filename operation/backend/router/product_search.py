@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List, Optional
 import logging
+import json
+from model.models import Member
 
 from model.database import get_db
 from model.models import ProductDescription, GeneratedImage
@@ -203,25 +205,20 @@ def get_my_products_stats(
             detail="통계 정보를 조회하는 중 오류가 발생했습니다."
         )
 
-# 검색 기능 (추후 확장 가능)
 @router.get("/recommended", response_model=List[UserProductResponse])
 def get_recommended_products(
-    request: Request,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
     limit: int = Query(default=6, ge=1, le=20, description="추천 상품 수")
 ):
     """
     다른 사용자들의 추천 상품을 조회합니다.
 
     - **limit**: 조회할 추천 상품 수 (1-20)
-    - 본인이 생성한 상품은 제외됩니다.
     - 이미지가 있는 상품만 조회됩니다.
     - 최신 생성 순으로 정렬됩니다.
+    - 인증이 필요하지 않은 공개 API입니다.
     """
     try:
-        validate_csrf(request)
-
         products = ProductSearchService.get_recommended_products(
             db=db,
             limit=limit
@@ -254,10 +251,14 @@ def search_my_products(
 
 
         results = (
-            db.query(ProductDescription, GeneratedImage)
+            db.query(ProductDescription, GeneratedImage, Member)
             .outerjoin(
                 GeneratedImage,
                 ProductDescription.job_id == GeneratedImage.job_id
+            )
+            .join(
+                Member,
+                ProductDescription.user_id == Member.id
             )
             .filter(
                 ProductDescription.user_id == current_user["id"],
@@ -272,20 +273,25 @@ def search_my_products(
         )
 
         # 응답 데이터 구성
-        import json
+
         products = []
-        for description, image in results:
+        for description, image, user in results:
+            # keywords JSON 파싱 (안전하게 처리)
             keywords = []
             if description.keywords:
                 try:
-                    keywords = json.loads(description.keywords)
-                except json.JSONDecodeError:
+                    parsed_keywords = json.loads(description.keywords)
+                    keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
+                except (json.JSONDecodeError, TypeError):
+                    logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
                     keywords = []
 
             product_data = UserProductResponse(
                 id=description.id,
                 job_id=description.job_id,
                 product_name=description.product_name,
+                username=user.username,
+                profile_pic=user.profile_pic,
                 description=description.generated_description,
                 category=description.category,
                 price=description.price,

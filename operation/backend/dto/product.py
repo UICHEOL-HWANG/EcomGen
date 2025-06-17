@@ -88,10 +88,11 @@ class UserProductResponse(BaseModel):
     job_id: Optional[str]
     product_name: str
     username: Optional[str] = None
+    profile_pic: Optional[str] = None
     description: str
     category: Optional[str]
     price: Optional[int]
-    keywords: List[str]
+    keywords: List[str] = []  # 기본값을 빈 리스트로 설정
     tone: Optional[str]
     image_url: Optional[str]
     created_at: datetime

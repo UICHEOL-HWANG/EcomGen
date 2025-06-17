@@ -49,7 +49,7 @@
     <section>
       <!-- 로딩 상태 -->
       <div v-if="loading" class="space-y-4">
-        <div v-for="n in 6" :key="n" class="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
+        <div v-for="n in 3" :key="n" class="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
           <div class="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
           <div class="h-4 bg-gray-200 rounded mb-2"></div>
           <div class="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
@@ -60,7 +60,7 @@
       <!-- 상품 목록 -->
       <div v-else class="space-y-4">
         <div 
-          v-for="product in filteredProducts" 
+          v-for="product in displayedProducts" 
           :key="product.id"
           @click="openProductDetail(product)"
           class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
@@ -94,8 +94,18 @@
             
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span class="text-xs">👤</span>
+                <!-- 프로필 사진 또는 이모지 -->
+                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                  <img 
+                    v-if="product.profile_pic" 
+                    :src="product.profile_pic" 
+                    :alt="product.user"
+                    class="w-full h-full object-cover"
+                    @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+                  />
+                  <div v-else class="w-full h-full bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="text-xs">👤</span>
+                  </div>
                 </div>
                 <span class="text-sm text-gray-600">{{ product.user }}님</span>
               </div>
@@ -108,14 +118,13 @@
         </div>
       </div>
 
-      <!-- 더 로드하기 버튼 -->
-      <div v-if="hasMore && !loading" class="mt-8 text-center">
+      <!-- 더 보기 버튼 -->
+      <div v-if="canShowMore && !loading" class="mt-6 text-center">
         <button 
-          @click="loadMore"
-          :disabled="loadingMore"
-          class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+          @click="showMore"
+          class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
         >
-          {{ loadingMore ? '로딩 중...' : '더 보기' }}
+          더 보기 ({{ remainingCount }}개 더 있음)
         </button>
       </div>
 
@@ -233,8 +242,18 @@
         <div class="p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-2">{{ selectedProduct.name }}</h2>
           <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span class="text-sm">👤</span>
+            <!-- 프로필 사진 또는 이모지 -->
+            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+              <img 
+                v-if="selectedProduct.profile_pic" 
+                :src="selectedProduct.profile_pic" 
+                :alt="selectedProduct.user"
+                class="w-full h-full object-cover"
+                @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+              />
+              <div v-else class="w-full h-full bg-blue-100 rounded-full flex items-center justify-center">
+                <span class="text-sm">👤</span>
+              </div>
             </div>
             <span class="text-gray-600">{{ selectedProduct.user }}님이 생성</span>
             <span class="text-gray-400">•</span>
@@ -269,25 +288,15 @@ const router = useRouter()
 
 // 상태 관리
 const loading = ref(true)
-const loadingMore = ref(false)
-const hasMore = ref(true)
 const selectedCategory = ref('all')
 const selectedSort = ref('latest')
 const selectedPriceRange = ref('all')
 const showFilterModal = ref(false)
 const selectedProduct = ref(null)
+const showAllProducts = ref(false)
 
-// 카테고리 목록
-const categories = ref([
-  { id: 'all', name: '전체' },
-  { id: 'fashion', name: '패션' },
-  { id: 'electronics', name: '전자제품' },
-  { id: 'home', name: '홈/리빙' },
-  { id: 'beauty', name: '뷰티' },
-  { id: 'sports', name: '스포츠' },
-  { id: 'books', name: '도서' },
-  { id: 'food', name: '식품' }
-])
+// 카테고리 목록 (동적으로 생성)
+const categories = ref([{ id: 'all', name: '전체' }])
 
 // 정렬 옵션
 const sortOptions = ref([
@@ -326,7 +335,8 @@ const loadProducts = async (limit = 20) => {
       price: product.price ? `${product.price.toLocaleString()}원` : '가격미정',
       category: product.category,
       emoji: getCategoryEmoji(product.category),
-      user: '익명', // API에 사용자 정보가 없으므로 기본값
+      user: product.username,
+      profile_pic: product.profile_pic, // 프로필 사진 추가
       createdAt: formatDate(product.created_at),
       imageUrl: product.image_url,
       keywords: product.keywords,
@@ -334,6 +344,9 @@ const loadProducts = async (limit = 20) => {
     }))
     
     products.value = transformedProducts
+    
+    // 카테고리 동적 생성
+    generateCategories()
     
   } catch (err) {
     console.error('추천 상품 로드 실패:', err)
@@ -371,6 +384,20 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString()
 }
 
+// 카테고리 동적 생성 함수
+const generateCategories = () => {
+  const uniqueCategories = [...new Set(products.value.map(p => p.category))]
+  const dynamicCategories = uniqueCategories.map(category => ({
+    id: category.toLowerCase().replace(/[^a-z0-9]/g, ''),
+    name: category
+  }))
+  
+  categories.value = [
+    { id: 'all', name: '전체' },
+    ...dynamicCategories
+  ]
+}
+
 // 필터된 상품 목록
 const filteredProducts = computed(() => {
   let filtered = products.value
@@ -406,18 +433,32 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
+// 표시할 상품 목록 (최대 3개 또는 전체)
+const displayedProducts = computed(() => {
+  if (showAllProducts.value) {
+    return filteredProducts.value
+  }
+  return filteredProducts.value.slice(0, 3)
+})
+
+// 더 보기 버튼 표시 여부
+const canShowMore = computed(() => {
+  return !showAllProducts.value && filteredProducts.value.length > 3
+})
+
+// 남은 상품 개수
+const remainingCount = computed(() => {
+  return Math.max(0, filteredProducts.value.length - 3)
+})
+
 // 뒤로 가기
 const goBack = () => {
   router.go(-1)
 }
 
-// 더 로드하기
-const loadMore = async () => {
-  loadingMore.value = true
-  // 실제로는 API 호출
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  loadingMore.value = false
-  // hasMore.value = false // 더 이상 로드할 데이터가 없을 때
+// 더 보기
+const showMore = () => {
+  showAllProducts.value = true
 }
 
 // 상품 상세 보기
@@ -428,7 +469,7 @@ const openProductDetail = (product) => {
 // 필터 적용
 const applyFilters = () => {
   showFilterModal.value = false
-  // 필터가 적용된 상태로 상품 목록 새로고침
+  showAllProducts.value = false // 필터 적용 시 다시 3개로 제한
 }
 
 // 필터 초기화
@@ -436,6 +477,7 @@ const resetFilters = () => {
   selectedCategory.value = 'all'
   selectedSort.value = 'latest'
   selectedPriceRange.value = 'all'
+  showAllProducts.value = false
 }
 
 // 컴포넌트 마운트 시
