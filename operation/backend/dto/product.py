@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
 class ProductDescriptionRequest(BaseModel):
     product_name: str
@@ -80,3 +81,32 @@ class GenerationStatusResponse(BaseModel):
     text_data: Optional[dict] = None
     image_data: Optional[dict] = None
     completed: bool
+
+# 사용자 생성 상품 조회용 DTO 추가
+class UserProductResponse(BaseModel):
+    id: int
+    job_id: Optional[str]
+    product_name: str
+    username: Optional[str] = None
+    description: str
+    category: Optional[str]
+    price: Optional[int]
+    keywords: List[str]
+    tone: Optional[str]
+    image_url: Optional[str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+class UserProductsListResponse(BaseModel):
+    products: List[UserProductResponse]
+    total: int
+    categories: List[str]
+
+class ProductDeleteResponse(BaseModel):
+    message: str
+    deleted_product_id: int

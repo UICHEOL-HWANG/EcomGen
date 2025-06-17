@@ -29,7 +29,7 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     return {"message": "User created", "user_id": user.id}
 
 @router.post("/login")
-def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db)):
+def login(user_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     user = db.query(Member).filter_by(email=user_data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="없는 유저 입니다.")
@@ -44,21 +44,30 @@ def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db
     )
     refresh_token = create_refresh_token(str(user.id))
     csrf_token = secrets.token_hex(16)
+    
+    print(f"[LOGIN] User {user.id} logging in")
+    print(f"[LOGIN] Generated refresh token: {refresh_token[:20]}...")
 
     # Save refresh_token to MongoDB
-    token_collection.insert_one({
+    token_doc = {
         "user_id": str(user.id),
         "refresh_token": refresh_token,
         "expires_at": datetime.utcnow() + settings.refresh_token_expire,
         "is_revoked": False,
         "created_at": datetime.utcnow()
-    })
+    }
+    
+    result = token_collection.insert_one(token_doc)
+    print(f"[LOGIN] Token saved to MongoDB: {result.inserted_id}")
 
-    set_token_cookies(response, access_token, refresh_token)
-
+    # 하이브리드 쿠키 설정 (데스크톱만)
+    set_token_cookies(response, request, access_token, refresh_token)
+    
     return {
         "message": "Login successful",
-        "csrf_token": csrf_token
+        "csrf_token": csrf_token,
+        "access_token": access_token,  # 모든 환경에 API로 제공
+        "refresh_token": refresh_token  # 모든 환경에 API로 제공
     }
 
 @router.post("/logout")
@@ -77,12 +86,21 @@ def logout(request: Request, response: Response):
     except JWTError:
         pass
 
+    # refresh 토큰을 무효화
     if refresh_token and user_id:
-        token_collection.insert_one({
-            "token": refresh_token,
-            "user_id": user_id,
-            "blacklisted_at": datetime.utcnow()
-        })
+        # 기존 토큰을 revoked로 업데이트
+        token_collection.update_one(
+            {
+                "refresh_token": refresh_token,
+                "user_id": user_id
+            },
+            {
+                "$set": {
+                    "is_revoked": True,
+                    "revoked_at": datetime.utcnow()
+                }
+            }
+        )
 
     clear_token_cookies(response)
     return {"message": "Logged out"}
@@ -90,8 +108,22 @@ def logout(request: Request, response: Response):
 @router.post("/refresh")
 def refresh_token(request: Request, response: Response):
     validate_csrf(request)
-    refresh_token = request.cookies.get("refresh_token")
+    
+    # 하이브리드 방식: 쿠키 또는 Authorization 헤더에서 refresh 토큰 가져오기
+    refresh_token = None
+    
+    # 1순위: Authorization 헤더 확인
+    auth_header = request.headers.get("X-Refresh-Token")
+    if auth_header:
+        refresh_token = auth_header
+        print(f"[REFRESH] Using X-Refresh-Token header: {refresh_token[:20]}...")
+    else:
+        # 2순위: 쿠키에서 가져오기
+        refresh_token = request.cookies.get("refresh_token")
+        print(f"[REFRESH] Using cookie refresh token: {refresh_token[:20] if refresh_token else 'None'}...")
+    
     if not refresh_token:
+        print("[REFRESH] No refresh token found in header or cookie")
         raise HTTPException(status_code=401, detail="Missing refresh token")
 
     try:
@@ -101,19 +133,34 @@ def refresh_token(request: Request, response: Response):
             algorithms=["HS256"]
         )
         user_id = payload.get("sub")
+        print(f"[REFRESH] Decoded user_id: {user_id}")
+        
         if user_id is None:
+            print("[REFRESH] No user_id in token payload")
             raise HTTPException(status_code=401, detail="Invalid refresh token")
-    except JWTError:
+    except JWTError as e:
+        print(f"[REFRESH] JWT decode error: {e}")
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
 
-    if not is_refresh_token_valid(refresh_token, user_id):
+    # 토큰 유효성 검사
+    is_valid = is_refresh_token_valid(refresh_token, user_id)
+    print(f"[REFRESH] Token validation result: {is_valid}")
+    
+    if not is_valid:
+        print(f"[REFRESH] Token validation failed for user {user_id}")
         raise HTTPException(status_code=401, detail="Refresh token is invalid or revoked")
 
     new_access_token = create_access_token(user_id)
     csrf_token = secrets.token_hex(16)  # 새로운 CSRF 토큰 생성
+    
+    print(f"[REFRESH] New tokens generated for user {user_id}")
 
-    set_token_cookies(response, new_access_token, refresh_token)
+    # 쿠키와 Response Body 둘 다 제공 (하이브리드)
+    set_token_cookies(response, request, new_access_token, refresh_token)
+    
     return {
         "message": "Access token refreshed",
-        "csrf_token": csrf_token
+        "csrf_token": csrf_token,
+        "access_token": new_access_token,  # 모바일용 추가
+        "refresh_token": refresh_token     # 모바일용 추가
     }
