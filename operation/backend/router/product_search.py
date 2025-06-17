@@ -174,6 +174,25 @@ def get_my_product_categories(
             detail="카테고리 목록을 조회하는 중 오류가 발생했습니다."
         )
 
+@router.get("/recommended/categories", response_model=List[str])
+def get_recommended_product_categories(
+    db: Session = Depends(get_db)
+):
+    """
+    추천 상품에서 사용 가능한 카테고리 목록을 조회합니다.
+    (이미지가 있는 상품들의 카테고리만 포함)
+    """
+    try:
+        categories = ProductSearchService.get_recommended_product_categories(db=db)
+        return categories
+
+    except Exception as e:
+        logger.error(f"Error in get_recommended_product_categories: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="추천 상품 카테고리 목록을 조회하는 중 오류가 발생했습니다."
+        )
+
 @router.get("/stats")
 def get_my_products_stats(
     request: Request,
@@ -208,26 +227,36 @@ def get_my_products_stats(
 @router.get("/recommended", response_model=List[UserProductResponse])
 def get_recommended_products(
     db: Session = Depends(get_db),
-    limit: int = Query(default=6, ge=1, le=20, description="추천 상품 수")
+    limit: int = Query(default=6, ge=1, le=100, description="추천 상품 수"),
+    category: Optional[str] = Query(default=None, description="카테고리 필터링")
 ):
     """
     다른 사용자들의 추천 상품을 조회합니다.
 
-    - **limit**: 조회할 추천 상품 수 (1-20)
+    - **limit**: 조회할 추천 상품 수 (1-100)
+    - **category**: 특정 카테고리로 필터링 (선택사항)
     - 이미지가 있는 상품만 조회됩니다.
     - 최신 생성 순으로 정렬됩니다.
     - 인증이 필요하지 않은 공개 API입니다.
     """
     try:
+        # 🐛 디버깅: 요청 파라미터 로그
+        logger.info(f"[DEBUG] 추천 상품 요청 - limit: {limit}, category: {category}")
+        
         products = ProductSearchService.get_recommended_products(
             db=db,
-            limit=limit
+            limit=limit,
+            category=category
         )
-
+        
+        # 🐛 디버깅: 반환 데이터 로그
+        logger.info(f"[DEBUG] 추천 상품 결과 - 개수: {len(products)}")
+        
         return products
 
     except Exception as e:
         logger.error(f"Error in get_recommended_products: {str(e)}")
+        logger.exception("Full traceback:")
         raise HTTPException(
             status_code=500,
             detail="추천 상품을 조회하는 중 오류가 발생했습니다."

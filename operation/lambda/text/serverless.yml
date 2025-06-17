@@ -11,7 +11,7 @@ provider:
   environment:
     FASTAPI_TEXT_CALLBACK_URL: ${env:FASTAPI_TEXT_CALLBACK_URL}
     RUNPOD_API_KEY: ${env:RUNPOD_API_KEY}
-    RUNPOD_TEXT_ENDPOINT_ID: ${env:RUNPOD_ENDPOINT_ID}
+    RUNPOD_TEXT_ENDPOINT_ID: ${env:RUNPOD_TEXT_ENDPOINT_ID}
     # SQS 관련 환경변수 추가
     SQS_TEXT_QUEUE_URL: ${env:SQS_TEXT_QUEUE_URL}
   iamRoleStatements:
@@ -38,17 +38,6 @@ functions:
       - sqs:
           arn: ${env:SQS_TEXT_QUEUE_ARN}
           batchSize: 1  # 한 번에 하나씩 처리
-    
-  # HTTP 엔드포인트는 테스트용으로만 사용 (옵션)
-  textGeneratorTest:
-    handler: generate_text.http_handler
-    layers:
-      - {Ref: PythonRequirementsLambdaLayer}
-    events:
-      - http:
-          path: text/generate
-          method: post
-          cors: true
 
 plugins:
   - serverless-python-requirements

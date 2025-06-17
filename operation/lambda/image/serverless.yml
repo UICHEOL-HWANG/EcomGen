@@ -41,17 +41,6 @@ functions:
       - sqs:
           arn: ${env:SQS_IMAGE_QUEUE_ARN}
           batchSize: 1  # 한 번에 하나씩 처리
-    
-  # HTTP 엔드포인트는 테스트용으로만 사용
-  imageGeneratorTest:
-    handler: generate_image.http_handler
-    layers:
-      - {Ref: PythonRequirementsLambdaLayer}
-    events:
-      - http:
-          path: image/generate
-          method: post
-          cors: true
 
 plugins:
   - serverless-python-requirements

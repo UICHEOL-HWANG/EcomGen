@@ -301,12 +301,16 @@ class ProductSearchService:
     @staticmethod
     def get_recommended_products(
         db: Session,
-        limit: int = 6
+        limit: int = 6,
+        category: Optional[str] = None
     ) -> List[UserProductResponse]:
         """
         이미지가 있는 모든 사용자들의 최신 추천 상품을 조회합니다.
         """
         try:
+            # 🐛 디버깅: 서비스 입력 로그
+            logger.info(f"[DEBUG] get_recommended_products 서비스 시작 - limit: {limit}, category: {category}")
+            
             query = (
                 db.query(ProductDescription, GeneratedImage, Member)
                 .join(
@@ -320,42 +324,90 @@ class ProductSearchService:
                 .filter(
                     GeneratedImage.file_url.isnot(None)
                 )
+            )
+            
+            # 카테고리 필터링 추가
+            if category:
+                logger.info(f"[DEBUG] 카테고리 필터 적용: {category}")
+                query = query.filter(ProductDescription.category == category)
+            
+            query = (
+                query
                 .order_by(desc(ProductDescription.created_at))
                 .limit(limit)
             )
-
+            
+            # 🐛 디버깅: 쿼리 실행 전 로그
+            logger.info(f"[DEBUG] 쿼리 실행 중...")
             results = query.all()
+            logger.info(f"[DEBUG] 쿼리 결과 개수: {len(results)}")
 
             products = []
             for description, image, user in results:
-                # keywords JSON 파싱 (안전하게 처리)
-                keywords = []
-                if description.keywords:
-                    try:
-                        parsed_keywords = json.loads(description.keywords)
-                        keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
-                    except (json.JSONDecodeError, TypeError):
-                        logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
-                        keywords = []
+                try:
+                    # keywords JSON 파싱 (안전하게 처리)
+                    keywords = []
+                    if description.keywords:
+                        try:
+                            parsed_keywords = json.loads(description.keywords)
+                            keywords = parsed_keywords if isinstance(parsed_keywords, list) else []
+                        except (json.JSONDecodeError, TypeError):
+                            logger.warning(f"Failed to parse keywords for product {description.id}: {description.keywords}")
+                            keywords = []
 
-                product_data = UserProductResponse(
-                    id=description.id,
-                    job_id=description.job_id,
-                    product_name=description.product_name,
-                    username=user.username,
-                    profile_pic=user.profile_pic,
-                    description=description.generated_description,
-                    category=description.category,
-                    price=description.price,
-                    keywords=keywords,
-                    tone=description.tone,
-                    image_url=image.file_url,
-                    created_at=description.created_at
-                )
-                products.append(product_data)
-
+                    product_data = UserProductResponse(
+                        id=description.id,
+                        job_id=description.job_id,
+                        product_name=description.product_name,
+                        username=user.username,
+                        profile_pic=user.profile_pic,
+                        description=description.generated_description,
+                        category=description.category,
+                        price=description.price,
+                        keywords=keywords,
+                        tone=description.tone,
+                        image_url=image.file_url,
+                        created_at=description.created_at
+                    )
+                    products.append(product_data)
+                    
+                except Exception as e:
+                    logger.error(f"[DEBUG] 상품 데이터 변환 오류 (product {description.id}): {str(e)}")
+                    # 해당 상품은 건너뛰고 계속 진행
+                    continue
+            
+            logger.info(f"[DEBUG] get_recommended_products 서비스 완료 - 최종 상품 개수: {len(products)}")
             return products
 
         except Exception as e:
             logger.error(f"Error fetching recommended products: {str(e)}")
+            logger.exception("Full traceback:")
+            raise e
+    
+    @staticmethod
+    def get_recommended_product_categories(db: Session) -> List[str]:
+        """
+        추천 상품에서 사용 가능한 카테고리 목록을 조회합니다.
+        (이미지가 있는 상품들의 카테고리만 포함)
+        """
+        try:
+            categories = (
+                db.query(ProductDescription.category)
+                .join(
+                    GeneratedImage,
+                    ProductDescription.job_id == GeneratedImage.job_id
+                )
+                .filter(
+                    GeneratedImage.file_url.isnot(None),
+                    ProductDescription.category.isnot(None),
+                    ProductDescription.category != ""
+                )
+                .distinct()
+                .all()
+            )
+            
+            return [cat[0] for cat in categories if cat[0]]
+            
+        except Exception as e:
+            logger.error(f"Error fetching recommended product categories: {str(e)}")
             raise e

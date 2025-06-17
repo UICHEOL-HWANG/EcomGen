@@ -98,17 +98,37 @@ export const searchMyProducts = async (query, limit = 20) => {
 /**
  * 다른 사용자들의 추천 상품 조회
  * @param {number} limit - 조회할 추천 상품 수 (기본: 6)
+ * @param {string} category - 카테고리 필터링 (선택사항)
  * @returns {Promise} 추천 상품 목록
  */
-export const getRecommendedProducts = async (limit = 6) => {
+export const getRecommendedProducts = async (limit = 6, category = null) => {
   try {
+    const params = { limit }
+    if (category) {
+      params.category = category
+    }
+    
     const response = await axiosInstance.get('/products/recommended', {
-      params: { limit }
+      params
     })
     return response.data
   } catch (error) {
     console.error('추천 상품 조회 실패:', error)
     throw new Error(error.response?.data?.detail || '추천 상품을 불러오는데 실패했습니다.')
+  }
+}
+
+/**
+ * 추천 상품 카테고리 목록 조회
+ * @returns {Promise} 카테고리 목록
+ */
+export const getRecommendedProductCategories = async () => {
+  try {
+    const response = await axiosInstance.get('/products/recommended/categories')
+    return response.data
+  } catch (error) {
+    console.error('추천 상품 카테고리 조회 실패:', error)
+    throw new Error(error.response?.data?.detail || '카테고리를 불러오는데 실패했습니다.')
   }
 }
 
@@ -119,5 +139,6 @@ export default {
   deleteMyProduct,
   getMyProductsStats,
   searchMyProducts,
-  getRecommendedProducts
+  getRecommendedProducts,
+  getRecommendedProductCategories
 }

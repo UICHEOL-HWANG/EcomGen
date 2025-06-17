@@ -32,7 +32,7 @@
         <button 
           v-for="category in categories"
           :key="category.id"
-          @click="selectedCategory = category.id"
+          @click="onCategoryChange(category.id)"
           :class="[
             'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition flex-shrink-0',
             selectedCategory === category.id 
@@ -282,7 +282,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getRecommendedProducts } from '@/api/products.js'
+import { getRecommendedProducts, getRecommendedProductCategories } from '@/api/products.js'
 
 const router = useRouter()
 
@@ -319,13 +319,42 @@ const priceRanges = ref([
 const products = ref([])
 const error = ref(null)
 
+// 카테고리 선택 시 상품 다시 로드
+const onCategoryChange = async (categoryId) => {
+  selectedCategory.value = categoryId
+  showAllProducts.value = false // 카테고리 변경 시 다시 3개로 제한
+  await loadProducts()
+}
+
+// 카테고리 목록 로드
+const loadCategories = async () => {
+  try {
+    const categoryList = await getRecommendedProductCategories()
+    const dynamicCategories = categoryList.map(category => ({
+      id: category,
+      name: category
+    }))
+    
+    categories.value = [
+      { id: 'all', name: '전체' },
+      ...dynamicCategories
+    ]
+  } catch (err) {
+    console.error('카테고리 로드 실패:', err)
+    // 카테고리 로드 실패 시 기본 카테고리만 사용
+    categories.value = [{ id: 'all', name: '전체' }]
+  }
+}
+
 // 실제 데이터 로드 함수
-const loadProducts = async (limit = 20) => {
+const loadProducts = async (limit = 50) => {
   try {
     loading.value = true
     error.value = null
     
-    const response = await getRecommendedProducts(limit)
+    // 선택된 카테고리에 따라 API 호출
+    const categoryParam = selectedCategory.value === 'all' ? null : selectedCategory.value
+    const response = await getRecommendedProducts(limit, categoryParam)
     
     // API 응답 데이터를 UI 형식에 맞게 변환
     const transformedProducts = response.map(product => ({
@@ -336,7 +365,7 @@ const loadProducts = async (limit = 20) => {
       category: product.category,
       emoji: getCategoryEmoji(product.category),
       user: product.username,
-      profile_pic: product.profile_pic, // 프로필 사진 추가
+      profile_pic: product.profile_pic,
       createdAt: formatDate(product.created_at),
       imageUrl: product.image_url,
       keywords: product.keywords,
@@ -344,9 +373,6 @@ const loadProducts = async (limit = 20) => {
     }))
     
     products.value = transformedProducts
-    
-    // 카테고리 동적 생성
-    generateCategories()
     
   } catch (err) {
     console.error('추천 상품 로드 실패:', err)
@@ -384,31 +410,13 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString()
 }
 
-// 카테고리 동적 생성 함수
-const generateCategories = () => {
-  const uniqueCategories = [...new Set(products.value.map(p => p.category))]
-  const dynamicCategories = uniqueCategories.map(category => ({
-    id: category.toLowerCase().replace(/[^a-z0-9]/g, ''),
-    name: category
-  }))
-  
-  categories.value = [
-    { id: 'all', name: '전체' },
-    ...dynamicCategories
-  ]
-}
 
-// 필터된 상품 목록
+
+// 필터된 상품 목록 (이제 백엔드에서 필터링하므로 단순화)
 const filteredProducts = computed(() => {
   let filtered = products.value
 
-  // 카테고리 필터
-  if (selectedCategory.value !== 'all') {
-    const categoryName = categories.value.find(c => c.id === selectedCategory.value)?.name
-    filtered = filtered.filter(product => product.category === categoryName)
-  }
-
-  // 정렬
+  // 정렬 (로컬 정렬)
   if (selectedSort.value === 'latest') {
     // 최신순 (이미 기본 정렬)
   } else if (selectedSort.value === 'popular') {
@@ -417,17 +425,42 @@ const filteredProducts = computed(() => {
   } else if (selectedSort.value === 'price_low') {
     // 가격 낮은순
     filtered = [...filtered].sort((a, b) => {
-      const priceA = parseInt(a.price.replace(/[^0-9]/g, ''))
-      const priceB = parseInt(b.price.replace(/[^0-9]/g, ''))
+      const priceA = parseInt(a.price.replace(/[^0-9]/g, '')) || 0
+      const priceB = parseInt(b.price.replace(/[^0-9]/g, '')) || 0
       return priceA - priceB
     })
   } else if (selectedSort.value === 'price_high') {
     // 가격 높은순
     filtered = [...filtered].sort((a, b) => {
-      const priceA = parseInt(a.price.replace(/[^0-9]/g, ''))
-      const priceB = parseInt(b.price.replace(/[^0-9]/g, ''))
+      const priceA = parseInt(a.price.replace(/[^0-9]/g, '')) || 0
+      const priceB = parseInt(b.price.replace(/[^0-9]/g, '')) || 0
       return priceB - priceA
     })
+  }
+
+  // 가격 범위 필터 (로컬 필터링)
+  if (selectedPriceRange.value !== 'all') {
+    if (selectedPriceRange.value === '0-50000') {
+      filtered = filtered.filter(product => {
+        const price = parseInt(product.price.replace(/[^0-9]/g, '')) || 0
+        return price <= 50000
+      })
+    } else if (selectedPriceRange.value === '50000-100000') {
+      filtered = filtered.filter(product => {
+        const price = parseInt(product.price.replace(/[^0-9]/g, '')) || 0
+        return price > 50000 && price <= 100000
+      })
+    } else if (selectedPriceRange.value === '100000-200000') {
+      filtered = filtered.filter(product => {
+        const price = parseInt(product.price.replace(/[^0-9]/g, '')) || 0
+        return price > 100000 && price <= 200000
+      })
+    } else if (selectedPriceRange.value === '200000+') {
+      filtered = filtered.filter(product => {
+        const price = parseInt(product.price.replace(/[^0-9]/g, '')) || 0
+        return price > 200000
+      })
+    }
   }
 
   return filtered
@@ -467,22 +500,25 @@ const openProductDetail = (product) => {
 }
 
 // 필터 적용
-const applyFilters = () => {
+const applyFilters = async () => {
   showFilterModal.value = false
   showAllProducts.value = false // 필터 적용 시 다시 3개로 제한
+  await loadProducts() // 데이터 다시 로드
 }
 
 // 필터 초기화
-const resetFilters = () => {
+const resetFilters = async () => {
   selectedCategory.value = 'all'
   selectedSort.value = 'latest'
   selectedPriceRange.value = 'all'
   showAllProducts.value = false
+  await loadProducts() // 데이터 다시 로드
 }
 
 // 컴포넌트 마운트 시
 onMounted(async () => {
-  await loadProducts()
+  await loadCategories() // 카테고리 먼저 로드
+  await loadProducts()   // 그 다음 상품 로드
 })
 </script>
 
