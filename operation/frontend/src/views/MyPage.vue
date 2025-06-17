@@ -1,5 +1,119 @@
 <template>
   <div class="px-4 py-6">
+    <!-- 내 활동 요약 -->
+    <section class="mb-6">
+      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-100 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          📊 내 활동 요약
+        </h3>
+        
+        <!-- 로딩 상태 -->
+        <div v-if="statsLoading" class="animate-pulse">
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-white/70 rounded-lg p-4">
+              <div class="h-8 bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div class="bg-white/70 rounded-lg p-4">
+              <div class="h-8 bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </div>
+          <div class="h-32 bg-white/70 rounded-lg"></div>
+        </div>
+        
+        <!-- 통계 데이터 -->
+        <div v-else-if="stats && stats.total_products > 0" class="space-y-4">
+          <!-- 주요 지표 -->
+          <div class="grid grid-cols-1 gap-4">
+            <div class="bg-white/70 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ stats.total_products }}</div>
+              <div class="text-sm text-gray-600">생성한 상품</div>
+            </div>
+          </div>
+          
+          <!-- 카테고리별 분포 -->
+          <div v-if="Object.keys(stats.category_breakdown).length > 0" class="bg-white/70 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">카테고리별 분포</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+              <div v-for="(count, category) in limitedCategories" :key="category" 
+                   class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: getCategoryColor(category) }"></div>
+                  <span class="text-sm text-gray-600">{{ category }}</span>
+                </div>
+                <span class="text-sm font-medium text-gray-900">{{ count }}개</span>
+              </div>
+              <!-- 더 보기 버튼 -->
+              <div v-if="hasMoreCategories" class="pt-2 border-t border-gray-200">
+                <button 
+                  @click="showAllCategories = !showAllCategories"
+                  class="text-sm text-blue-600 hover:text-blue-700 transition"
+                >
+                  {{ showAllCategories ? '접기' : `+${remainingCategoriesCount}개 더 보기` }}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 간단한 도넛 차트 영역 (나중에 Chart.js로 구현) -->
+          <div v-if="Object.keys(stats.category_breakdown).length > 0" class="bg-white/70 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">카테고리 분포 차트</h4>
+            <div class="flex justify-center relative">
+              <div class="relative">
+                <canvas 
+                  ref="categoryChart" 
+                  width="160" 
+                  height="160" 
+                  class="max-w-[160px] max-h-[160px] cursor-pointer"
+                  @mousemove="handleChartMouseMove"
+                  @mouseleave="handleChartMouseLeave"
+                ></canvas>
+                <!-- 중앙 텍스트 -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div class="text-center">
+                    <div class="text-lg font-bold text-gray-900">{{ stats.total_products }}</div>
+                    <div class="text-xs text-gray-600">총 상품</div>
+                  </div>
+                </div>
+                <!-- 툰팁 -->
+                <div 
+                  v-if="chartHoverInfo.visible"
+                  class="absolute bg-gray-900 text-white px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none z-10"
+                  :style="{ left: chartHoverInfo.x + 'px', top: chartHoverInfo.y + 'px', transform: 'translate(-50%, -120%)' }"
+                >
+                  {{ chartHoverInfo.category }}: {{ chartHoverInfo.count }}개
+                  <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 에러 상태 -->
+        <div v-else class="text-center py-6">
+          <div class="text-4xl mb-3">📊</div>
+          <h4 class="text-md font-semibold text-gray-900 mb-2">아직 집계된 데이터가 없습니다</h4>
+          <p class="text-sm text-gray-600 mb-4">AI로 상품을 생성하시면<br />활동 통계를 확인할 수 있어요</p>
+          <div class="flex gap-2 justify-center">
+            <button 
+              @click="goToGenerate"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2"
+            >
+              <span>✨</span>
+              상품 생성하기
+            </button>
+            <button 
+              @click="loadStats"
+              class="px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition text-sm"
+            >
+              새로고침
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 사용자 정보 카드 -->
     <section class="mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-6 text-center">
@@ -137,6 +251,7 @@
               v-model="editForm.username"
               type="text"
               required
+              autocomplete="name"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -180,6 +295,7 @@
               v-model="passwordForm.currentPassword"
               type="password"
               required
+              autocomplete="current-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -190,6 +306,7 @@
               v-model="passwordForm.newPassword"
               type="password"
               required
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -200,6 +317,7 @@
               v-model="passwordForm.confirmPassword"
               type="password"
               required
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -381,10 +499,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, Transition } from 'vue'
+import { ref, onMounted, Transition, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/userStore'
 import { updateMyInfo, changePassword, deleteAccount, uploadProfileImage, deleteProfileImage } from '@/api/auth'
+import { getMyProductsStats } from '@/api/products'
 import CameraCapture from '@/components/CameraCapture.vue'
 
 const router = useRouter()
@@ -415,14 +534,290 @@ const editError = ref('')
 const passwordError = ref('')
 const deleteError = ref('')
 
+// 카테고리 리스트 제한 및 더 보기 기능
+const showAllCategories = ref(false)
+const maxDisplayCategories = 6 // 최대 표시 카테고리 수
+
+// 통계 관련 상태
+const stats = ref(null)
+const statsLoading = ref(false)
+const categoryChart = ref(null)
+const chartHoverInfo = ref({ visible: false, x: 0, y: 0, category: '', count: 0 })
+const chartSlices = ref([])
+
+// 카테고리 리스트 계산된 속성
+const limitedCategories = computed(() => {
+  if (!stats.value?.category_breakdown) return {}
+  
+  const categories = Object.entries(stats.value.category_breakdown)
+  
+  if (showAllCategories.value || categories.length <= maxDisplayCategories) {
+    return stats.value.category_breakdown
+  }
+  
+  // 개수로 정렬하여 상위 N개만 표시
+  const sortedCategories = categories.sort((a, b) => b[1] - a[1])
+  const limitedEntries = sortedCategories.slice(0, maxDisplayCategories)
+  
+  return Object.fromEntries(limitedEntries)
+})
+
+// 더 보기 버튼 표시 여부
+const hasMoreCategories = computed(() => {
+  if (!stats.value?.category_breakdown) return false
+  return Object.keys(stats.value.category_breakdown).length > maxDisplayCategories
+})
+
+// 남은 카테고리 수
+const remainingCategoriesCount = computed(() => {
+  if (!stats.value?.category_breakdown) return 0
+  return Math.max(0, Object.keys(stats.value.category_breakdown).length - maxDisplayCategories)
+})
+
 // 컴포넌트 마운트 시 사용자 정보로 폼 초기화
-onMounted(() => {
+onMounted(async () => {
   if (userStore.user) {
     editForm.value = {
       username: userStore.user.username || userStore.user.name || ''
     }
   }
+  
+  // 통계 데이터 로드
+  await loadStats()
+  
+  // 차트 강제 다시 그리기 (디버그용)
+  setTimeout(() => {
+    if (stats.value?.category_breakdown && Object.keys(stats.value.category_breakdown).length > 0) {
+      console.log('차트 강제 다시 그리기 시도')
+      drawChart()
+    }
+  }, 500)
 })
+
+// 통계 데이터 로드
+const loadStats = async () => {
+  try {
+    statsLoading.value = true
+    const response = await getMyProductsStats()
+    stats.value = response
+    
+    // 차트 그리기 (다음 틱에 실행)
+    await nextTick()
+    if (Object.keys(response.category_breakdown).length > 0) {
+      drawChart()
+    }
+  } catch (error) {
+    console.error('통계 로드 실패:', error)
+    stats.value = null
+  } finally {
+    statsLoading.value = false
+  }
+}
+
+// 카테고리별 색상 매핑 (동적 색상 생성)
+const categoryColorMap = ref({})
+
+const getCategoryColor = (category) => {
+  // 이미 색상이 할당된 카테고리면 기존 색상 반환
+  if (categoryColorMap.value[category]) {
+    return categoryColorMap.value[category]
+  }
+  
+  // 미리 정의된 좋은 색상 팔레트
+  const colorPalette = [
+    '#3B82F6', // 파란색
+    '#10B981', // 초록색
+    '#F59E0B', // 주황색
+    '#EF4444', // 빨간색
+    '#8B5CF6', // 보라색
+    '#06B6D4', // 청록색
+    '#84CC16', // 라임색
+    '#F97316', // 오렌지색
+    '#EC4899', // 핑크색
+    '#14B8A6', // 틸색
+    '#8B5A2B', // 갈색
+    '#6366F1', // 인디고색
+    '#DC2626', // 진한 빨간색
+    '#059669', // 진한 초록색
+    '#7C3AED', // 진한 보라색
+    '#0891B2', // 진한 청록색
+  ]
+  
+  // 기존에 사용된 색상들 추적
+  const usedColors = Object.values(categoryColorMap.value)
+  
+  // 아직 사용되지 않은 색상 찾기
+  let availableColor = colorPalette.find(color => !usedColors.includes(color))
+  
+  // 모든 팔레트 색상이 사용되었다면 랜덤 색상 생성
+  if (!availableColor) {
+    const hue = Math.floor(Math.random() * 360)
+    const saturation = 60 + Math.floor(Math.random() * 20) // 60-80%
+    const lightness = 45 + Math.floor(Math.random() * 15) // 45-60%
+    availableColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+  }
+  
+  // 카테고리에 색상 할당
+  categoryColorMap.value[category] = availableColor
+  return availableColor
+}
+
+// 간단한 도넛 차트 그리기 (Canvas API 사용)
+const drawChart = () => {
+  if (!categoryChart.value || !stats.value?.category_breakdown) {
+    console.log('차트 그리기 조건 불충족:', {
+      canvas: !!categoryChart.value,
+      data: !!stats.value?.category_breakdown
+    })
+    return
+  }
+  
+  const canvas = categoryChart.value
+  const ctx = canvas.getContext('2d')
+  
+  // 고정된 캔버스 크기 사용
+  canvas.width = 160
+  canvas.height = 160
+  
+  const centerX = 80
+  const centerY = 80
+  const outerRadius = 70
+  const innerRadius = 35
+  
+  // 캔버스 초기화
+  ctx.clearRect(0, 0, 160, 160)
+  
+  const categories = Object.entries(stats.value.category_breakdown)
+  console.log('차트 데이터:', categories)
+  
+  if (categories.length === 0) {
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI)
+    ctx.strokeStyle = '#e5e7eb'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    return
+  }
+  
+  const total = Object.values(stats.value.category_breakdown).reduce((sum, count) => sum + count, 0)
+  
+  let currentAngle = -Math.PI / 2 // 12시 방향부터 시작
+  
+  // 차트 슬라이스 정보 초기화
+  chartSlices.value = []
+  
+  categories.forEach(([category, count]) => {
+    const sliceAngle = (count / total) * 2 * Math.PI
+    
+    // 최소 각도 보장 (작은 조각도 호버 가능하도록)
+    const minAngle = 0.15 // 더 크게 설정
+    const adjustedSliceAngle = Math.max(sliceAngle, minAngle)
+    
+    // 각도 정규화 (0~2π 범위)
+    let normalizedStart = currentAngle
+    if (normalizedStart < 0) normalizedStart += 2 * Math.PI
+    
+    let normalizedEnd = currentAngle + adjustedSliceAngle
+    if (normalizedEnd < 0) normalizedEnd += 2 * Math.PI
+    
+    // 슬라이스 정보 저장
+    chartSlices.value.push({
+      category,
+      count,
+      startAngle: normalizedStart,
+      endAngle: normalizedEnd,
+      centerX: 80,
+      centerY: 80,
+      outerRadius: 70,
+      innerRadius: 35
+    })
+    
+    // 도넛 슬라이스 그리기
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, outerRadius, currentAngle, currentAngle + adjustedSliceAngle)
+    ctx.arc(centerX, centerY, innerRadius, currentAngle + adjustedSliceAngle, currentAngle, true)
+    ctx.closePath()
+    
+    // 색상 설정
+    const color = getCategoryColor(category)
+    ctx.fillStyle = color
+    ctx.fill()
+    
+    // 테두리
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    
+    console.log(`카테고리: ${category}, 정규화 시작: ${normalizedStart.toFixed(3)}, 정규화 끝: ${normalizedEnd.toFixed(3)}`)
+    
+    currentAngle += adjustedSliceAngle
+  })
+  
+  console.log('차트 그리기 완료')
+}
+
+// 차트 마우스 이벤트 처리
+const handleChartMouseMove = (event) => {
+  if (!chartSlices.value.length) return
+  
+  const canvas = categoryChart.value
+  const rect = canvas.getBoundingClientRect()
+  
+  // 캔버스 상에서의 마우스 위치 (스케일링 고려)
+  const scaleX = 160 / rect.width
+  const scaleY = 160 / rect.height
+  const x = (event.clientX - rect.left) * scaleX
+  const y = (event.clientY - rect.top) * scaleY
+  
+  // 차트 중심에서의 거리와 각도 계산
+  const dx = x - 80
+  const dy = y - 80
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  
+  // 각도 계산: Math.atan2로 기본 각도 계산 후 정규화
+  let angle = Math.atan2(dy, dx)
+  if (angle < 0) angle += 2 * Math.PI
+  
+  console.log(`마우스: (${x.toFixed(1)}, ${y.toFixed(1)}), 거리: ${distance.toFixed(1)}, 각도: ${(angle * 180 / Math.PI).toFixed(1)}도`)
+  
+  // 호버된 슬라이스 찾기
+  const hoveredSlice = chartSlices.value.find(slice => {
+    const isInRange = distance >= slice.innerRadius && distance <= slice.outerRadius
+    let isInAngle = false
+    
+    // 각도 범위 검사
+    if (slice.endAngle > slice.startAngle) {
+      // 일반적인 경우
+      isInAngle = angle >= slice.startAngle && angle <= slice.endAngle
+    } else {
+      // 2π를 넘는 경우 (0도 근처에서 끊긴 경우)
+      isInAngle = angle >= slice.startAngle || angle <= slice.endAngle
+    }
+    
+    if (isInRange && isInAngle) {
+      console.log(`호버 감지! 카테고리: ${slice.category}, 시작: ${(slice.startAngle * 180 / Math.PI).toFixed(1)}도, 끝: ${(slice.endAngle * 180 / Math.PI).toFixed(1)}도`)
+    }
+    
+    return isInRange && isInAngle
+  })
+  
+  if (hoveredSlice) {
+    chartHoverInfo.value = {
+      visible: true,
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+      category: hoveredSlice.category,
+      count: hoveredSlice.count
+    }
+  } else {
+    chartHoverInfo.value.visible = false
+  }
+}
+
+// 차트 마우스 떠날 때 처리
+const handleChartMouseLeave = () => {
+  chartHoverInfo.value.visible = false
+}
 
 // 로그아웃 처리
 const handleLogout = async () => {
@@ -541,6 +936,11 @@ const goToMyProducts = () => {
 // 내가 검색한 리포트 페이지로 이동
 const goToMyReports = () => {
   router.push('/my-reports')
+}
+
+// 상품 생성 페이지로 이동
+const goToGenerate = () => {
+  router.push('/generate')
 }
 
 // 갤러리에서 사진 선택

@@ -62,11 +62,26 @@ const router = createRouter({
 })
 
 // 인증이 필요한 페이지 보호
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
-  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
-    next('/login')
+  if (to.meta.requiresAuth) {
+    // CSRF 토큰이 있으면 인증 상태 확인을 기다림
+    const csrfToken = sessionStorage.getItem('csrf_token')
+    
+    if (csrfToken && !userStore.isAuthenticated) {
+      try {
+        await userStore.checkAuthStatus()
+      } catch (error) {
+        // 인증 실패 시 로그인으로 리다이렉트
+      }
+    }
+    
+    if (!userStore.isAuthenticated) {
+      next('/login')
+    } else {
+      next()
+    }
   } else {
     next()
   }

@@ -35,6 +35,9 @@ def generate_product_combined(
         
         # 고유 작업 ID 생성
         job_id = str(uuid.uuid4())
+        
+        # 🐛 디버깅: 받은 키워드 로그
+        logger.info(f"[DEBUG] 받은 키워드 - Job ID: {job_id}, Keywords: {request.keywords}")
 
         # 1. 텍스트 생성 요청 SQS 전송
         session = boto3.session.Session(region_name="ap-northeast-2")
@@ -55,6 +58,9 @@ def generate_product_combined(
             "keywords": request.keywords,
             "tone": request.tone
         }
+        
+        # 🐛 디버깅: SQS 전송할 페이로드 로그
+        logger.info(f"[DEBUG] SQS 전송 페이로드 - Job ID: {job_id}, Keywords: {text_payload['keywords']}")
         
         sqs.send_message(
             QueueUrl=text_queue_url,
@@ -178,8 +184,14 @@ def receive_text_callback(
     Lambda에서 텍스트 생성 완료 후 콜백 받는 엔드포인트
     """
     try:
+        # 🐛 디버깅: 콜백으로 받은 키워드 로그
+        logger.info(f"[DEBUG] 콜백 받은 키워드 - Job ID: {data.job_id}, Keywords: {data.keywords}")
+        
         # 키워드 리스트를 JSON 문자열로 변환
         keywords_json = json.dumps(data.keywords) if data.keywords else None
+        
+        # 🐛 디버깅: JSON 변환 후 로그
+        logger.info(f"[DEBUG] JSON 변환 후 - Job ID: {data.job_id}, Keywords JSON: {keywords_json}")
 
         # 저장
         description_obj = ProductDescription(

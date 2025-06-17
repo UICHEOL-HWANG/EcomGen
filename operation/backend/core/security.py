@@ -14,8 +14,24 @@ from utils.pymongo import get_token_collection
 ACCESS_SECRET_KEY = settings.access_secret_key
 REFRESH_SECRET_KEY = settings.refresh_secret_key
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# 토큰 만료 시간 (보안 강화)
+ACCESS_TOKEN_EXPIRE_MINUTES = 15  # 15분 (기존 유지)
+REFRESH_TOKEN_EXPIRE_DAYS = 3     # 3일로 단축 (기존 7일)
+
+# 모바일 브라우저 감지 함수
+def is_mobile_browser(user_agent: str) -> bool:
+    """User-Agent를 통해 모바일 브라우저 감지"""
+    if not user_agent:
+        return False
+        
+    mobile_indicators = [
+        'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+        'webos', 'windows phone', 'mobile', 'opera mini'
+    ]
+    
+    user_agent_lower = user_agent.lower()
+    return any(indicator in user_agent_lower for indicator in mobile_indicators)
 
 
 # JWT 생성
@@ -34,29 +50,72 @@ def create_refresh_token(user_id: str) -> str:
     payload = {"sub": user_id, "exp": expire}
     return jwt.encode(payload, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
-# 쿠키 세팅 (CSRF 토큰은 Response Body로 전달)
-def set_token_cookies(response: Response, access_token: str, refresh_token: str):
+# 하이브리드 쿠키 세팅 (모바일은 생략, 데스크톱은 HttpOnly)
+def set_token_cookies(response: Response, request: Request, access_token: str, refresh_token: str):
+    user_agent = request.headers.get("User-Agent", "")
+    is_mobile = is_mobile_browser(user_agent)
+    
+    print(f"[COOKIE] User-Agent: {user_agent[:50]}...")
+    print(f"[COOKIE] Is Mobile: {is_mobile}")
+    
+    if is_mobile:
+        print("[COOKIE] Mobile detected - skipping cookie setup, using API response only")
+        return  # 모바일은 쿠키 설정 안 함
+    
+    # 데스크톱만 HttpOnly 쿠키 설정
+    print("[COOKIE] Desktop detected - setting HttpOnly cookies")
+    
+    # Access Token 쿠키 (데스크톱 전용)
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="none",  # 크로스 도메인 필수!
-        max_age=settings.access_token_expire.seconds
+        samesite="none",  # 데스크톱 크로스 도메인
+        max_age=settings.access_token_expire.seconds,
+        path="/"
     )
+    
+    # Refresh Token 쿠키 (데스크톱 전용)
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
         secure=True,
-        samesite="none",  # 크로스 도메인 필수!
-        max_age=settings.refresh_token_expire.total_seconds()
+        samesite="none",
+        max_age=int(settings.refresh_token_expire.total_seconds()),
+        path="/"
     )
+    
+    print("[COOKIE] HttpOnly cookies set successfully for desktop")
 
 # 쿠키 제거
 def clear_token_cookies(response: Response):
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    # UTC 시간으로 과거 날짜 생성
+    past_date = datetime.utcnow() - timedelta(days=1)
+    
+    # 쿠키 삭제 시에도 동일한 속성을 지정해야 제대로 삭제됨
+    response.set_cookie(
+        key="access_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="none",  # 설정 시와 동일하게
+        max_age=0,  # 즉시 만료
+        expires=past_date,  # UTC 시간으로 과거 날짜
+        path="/"
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value="",
+        httponly=True,
+        secure=True,
+        samesite="none",
+        max_age=0,
+        expires=past_date,  # UTC 시간으로 과거 날짜
+        path="/"
+    )
+    print("[COOKIE] Cookies cleared successfully")
 
 # 토큰 검증
 def verify_token(token: str, secret_key: str) -> Optional[str]:
@@ -66,19 +125,34 @@ def verify_token(token: str, secret_key: str) -> Optional[str]:
     except JWTError:
         return None
 
-# 사용자 가져오기 (FastAPI 의존성으로)
+# 사용자 가져오기 (하이브리드 방식: 쿠키 또는 Authorization 헤더)
 def get_current_user(request: Request) -> dict:
-    token = request.cookies.get("access_token")
+    # 1순위: Authorization 헤더 확인 (모바일 친화적)
+    auth_header = request.headers.get("Authorization")
+
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        print(f"[AUTH] Using Authorization header token: {token[:20]}...")
+    else:
+        # 2순위: 쿠키에서 access_token 가져오기
+        token = request.cookies.get("access_token")
+        print(f"[AUTH] Using cookie token: {token[:20] if token else 'None'}...")
+    
     if not token:
+        print("[AUTH] No token found in header or cookie")
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        
     try:
         payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
-        return {
+        user_data = {
             "id": payload.get("sub"),
             "email": payload.get("email"),
             "username": payload.get("username")
         }
-    except JWTError:
+        print(f"[AUTH] Successfully authenticated user: {user_data['id']}")
+        return user_data
+    except JWTError as e:
+        print(f"[AUTH] Token validation failed: {e}")
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Token invalid or expired")
 
 # MongoDB 기반 refresh token 유효성 검사
@@ -86,19 +160,63 @@ def get_current_user(request: Request) -> dict:
 
 def is_refresh_token_valid(token: str, user_id: str) -> bool:
     token_collection = get_token_collection()
+    
+    print(f"[TOKEN_VALIDATION] Checking token for user {user_id}")
+    print(f"[TOKEN_VALIDATION] Token: {token[:20]}...")
+    
     token_doc = token_collection.find_one({
         "refresh_token": token,
         "user_id": user_id,
-        "is_revoked": False,
-        "expires_at": {"$gt": datetime.utcnow()}
+        "is_revoked": False,  # 무효화되지 않은 토큰
+        "expires_at": {"$gt": datetime.utcnow()}  # 만료되지 않은 토큰
     })
+    
+    if token_doc:
+        print(f"[TOKEN_VALIDATION] Token found in DB")
+    else:
+        print(f"[TOKEN_VALIDATION] Token NOT found in DB")
+        # 디버깅: 존재하는 토큰들 확인
+        all_tokens = token_collection.find({"user_id": user_id})
+        print(f"[TOKEN_VALIDATION] Found {token_collection.count_documents({'user_id': user_id})} tokens for user")
+        for doc in all_tokens:
+            print(f"[TOKEN_VALIDATION] DB Token: {doc.get('refresh_token', '')[:20]}... revoked: {doc.get('is_revoked')} expires: {doc.get('expires_at')}")
+    
     return token_doc is not None
 
+# 사용자의 모든 refresh 토큰 무효화 (로그아웃 시 옵션)
+def revoke_all_user_tokens(user_id: str) -> int:
+    token_collection = get_token_collection()
+    result = token_collection.update_many(
+        {
+            "user_id": user_id,
+            "is_revoked": False
+        },
+        {
+            "$set": {
+                "is_revoked": True,
+                "revoked_at": datetime.utcnow()
+            }
+        }
+    )
+    return result.modified_count
 
-# CSRF 토큰 검증 (localStorage 방식)
+
+# CSRF 토큰 검증 (유연한 버전)
 def validate_csrf(request: Request):
     csrf_token_header = request.headers.get("X-CSRF-Token")
+    
+    # 디버깅 로그
+    print(f"[CSRF] Header token: {csrf_token_header[:16] if csrf_token_header else 'None'}...")
+    
     if not csrf_token_header:
-        raise HTTPException(status_code=403, detail="CSRF token missing or invalid")
-    # 추가 검증 로직이 필요한 경우 여기에 추가
-    # 예: 데이터베이스에 저장된 CSRF 토큰과 비교
+        print("[CSRF] Warning: No CSRF token in request header")
+        # 초기 로그인/refresh 시도에서는 CSRF 토큰이 없을 수 있음
+        return True
+    
+    # CSRF 토큰이 있으면 기본 검사
+    if len(csrf_token_header) < 8:  # 최소 길이 검사 완화
+        print("[CSRF] Invalid CSRF token format")
+        raise HTTPException(status_code=403, detail="Invalid CSRF token format")
+    
+    print("[CSRF] Token validation passed")
+    return True

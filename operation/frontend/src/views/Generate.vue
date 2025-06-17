@@ -32,10 +32,10 @@
 
     <!-- 1단계: 상품 정보 입력 -->
     <section v-if="currentStep === 1" class="space-y-6">
-      <form @submit.prevent="handleGenerateProduct" class="space-y-4">
+      <form @submit.prevent="handleGenerateProduct" class="space-y-6">
         <!-- 상품명 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">상품명 *</label>
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">상품명 *</label>
           <input
             v-model="productForm.product_name"
             type="text"
@@ -45,31 +45,14 @@
           />
         </div>
 
-        <!-- 카테고리 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">카테고리 *</label>
-          <select
-            v-model="productForm.category"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-          >
-            <option value="">카테고리를 선택하세요</option>
-            <option value="패션">패션</option>
-            <option value="신발">신발</option>
-            <option value="가방">가방</option>
-            <option value="악세서리">악세서리</option>
-            <option value="전자제품">전자제품</option>
-            <option value="가전제품">가전제품</option>
-            <option value="스포츠">스포츠</option>
-            <option value="뷰티">뷰티</option>
-            <option value="홈인테리어">홈인테리어</option>
-            <option value="기타">기타</option>
-          </select>
+        <!-- 카테고리 선택기 -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <CategorySelector v-model="productForm.category" />
         </div>
 
         <!-- 가격 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">예상 가격 *</label>
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">예상 가격 *</label>
           <div class="relative">
             <input
               v-model.number="productForm.price"
@@ -85,9 +68,9 @@
         </div>
 
         <!-- 키워드 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">키워드 (선택사항)</label>
-          <div class="space-y-2">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">키워드 (선택사항)</label>
+          <div class="space-y-3">
             <input
               v-model="keywordInput"
               @keydown.enter.prevent="addKeyword"
@@ -108,48 +91,26 @@
           </div>
         </div>
 
-        <!-- 톤앤매너 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">톤앤매너 *</label>
-          <div class="grid grid-cols-2 gap-3">
-            <label
-              v-for="tone in toneOptions"
-              :key="tone.value"
-              class="relative cursor-pointer"
-            >
-              <input
-                v-model="productForm.tone"
-                :value="tone.value"
-                type="radio"
-                class="sr-only"
-              />
-              <div
-                class="p-3 border-2 rounded-lg text-center transition-all"
-                :class="productForm.tone === tone.value 
-                  ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                  : 'border-gray-200 text-gray-700 hover:border-gray-300'"
-              >
-                <div class="text-lg mb-1">{{ tone.emoji }}</div>
-                <div class="text-sm font-medium">{{ tone.label }}</div>
-                <div class="text-xs text-gray-500">{{ tone.description }}</div>
-              </div>
-            </label>
-          </div>
+        <!-- 톤 선택기 -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <ToneSelector v-model="productForm.tone" />
         </div>
 
         <!-- 에러 메시지 -->
-        <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div v-if="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-xl">
           <p class="text-sm text-red-600">{{ errorMessage }}</p>
         </div>
 
         <!-- 생성 버튼 -->
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-        >
-          {{ loading ? 'AI가 생성 중입니다...' : '🎨 AI로 상품 생성하기' }}
-        </button>
+        <div class="pt-4">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 text-lg"
+          >
+            {{ loading ? 'AI가 생성 중...' : '🎨 AI로 상품 생성하기' }}
+          </button>
+        </div>
       </form>
     </section>
 
@@ -162,17 +123,22 @@
           생성된 이미지
         </h3>
         
-        <div v-if="generatedImage" class="text-center">
+        <!-- 이미지 로딩 스켈레톤 -->
+        <div v-if="imageLoading" class="animate-pulse">
+          <div class="w-full max-w-sm mx-auto h-64 bg-gray-200 rounded-lg"></div>
+          <div class="text-center mt-4">
+            <div class="h-4 bg-gray-200 rounded w-48 mx-auto mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-32 mx-auto"></div>
+          </div>
+        </div>
+        
+        <!-- 생성된 이미지 -->
+        <div v-else-if="generatedImage" class="text-center">
           <img
             :src="generatedImage.startsWith('http') ? generatedImage : `data:image/png;base64,${generatedImage}`"
             :alt="productForm.product_name"
             class="w-full max-w-sm mx-auto rounded-lg border border-gray-200 shadow-sm"
           />
-        </div>
-        
-        <div v-else-if="imageLoading" class="text-center py-12">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p class="text-gray-600">이미지를 생성하고 있습니다...</p>
         </div>
       </div>
 
@@ -183,13 +149,18 @@
           상품 설명
         </h3>
         
-        <div v-if="generatedDescription" class="prose prose-sm">
-          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ generatedDescription }}</p>
+        <!-- 설명 로딩 스켈레톤 -->
+        <div v-if="descriptionLoading" class="animate-pulse space-y-3">
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-200 rounded"></div>
+          <div class="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
         
-        <div v-else-if="descriptionLoading" class="text-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p class="text-gray-600">설명을 생성하고 있습니다...</p>
+        <!-- 생성된 설명 -->
+        <div v-else-if="generatedDescription" class="prose prose-sm">
+          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ generatedDescription }}</p>
         </div>
       </div>
 
@@ -207,23 +178,17 @@
           :disabled="saving"
           class="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
         >
-          {{ saving ? '저장 중...' : '저장하기' }}
+          {{ saving ? '내 상품으로 이동 중...' : '내 상품 보기' }}
         </button>
       </div>
     </section>
 
-    <!-- 로딩 오버레이 -->
+    <!-- 로딩 오버레이 (게이지바 제거된 버전) -->
     <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <h3 class="font-bold text-gray-900 mb-2">AI가 열심히 작업 중입니다</h3>
-        <p class="text-gray-600 text-sm mb-4">{{ loadingMessage }}</p>
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-1000"
-            :style="{ width: `${loadingProgress}%` }"
-          ></div>
-        </div>
+        <p class="text-gray-600 text-sm">상품을 생성하고 있습니다...</p>
       </div>
     </div>
   </div>
@@ -233,6 +198,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateProductAndWait } from '@/api/generate.js'
+import CategorySelector from '@/components/CategorySelector.vue'
+import ToneSelector from '@/components/ToneSelector.vue'
 
 const router = useRouter()
 
@@ -251,43 +218,12 @@ const productForm = reactive({
 // 키워드 입력
 const keywordInput = ref('')
 
-// 톤앤매너 옵션
-const toneOptions = [
-  {
-    value: 'professional',
-    label: '전문적',
-    description: '신뢰할 수 있는',
-    emoji: '💼'
-  },
-  {
-    value: 'friendly',
-    label: '친근한',
-    description: '따뜻하고 편안한',
-    emoji: '😊'
-  },
-  {
-    value: 'luxury',
-    label: '럭셔리',
-    description: '고급스러운',
-    emoji: '✨'
-  },
-  {
-    value: 'casual',
-    label: '캐주얼',
-    description: '자연스러운',
-    emoji: '👕'
-  }
-]
-
 // 상태 관리
 const loading = ref(false)
 const imageLoading = ref(false)
 const descriptionLoading = ref(false)
 const saving = ref(false)
 const errorMessage = ref('')
-
-const loadingMessage = ref('')
-const loadingProgress = ref(0)
 
 // 생성 결과
 const generatedImage = ref('')
@@ -317,29 +253,23 @@ const handleGenerateProduct = async () => {
     return
   }
 
-  loading.value = true
-  loadingProgress.value = 0
+  // 즐시 2단계로 이동 + 로딩 상태 시작
   currentStep.value = 2
-  imageLoading.value = true
-  descriptionLoading.value = true
-
+  loading.value = true  // 모달 표시
+  imageLoading.value = true  // 스켈레톤 표시
+  descriptionLoading.value = true  // 스켈레톤 표시
+  
   try {
     // 실제 API 호출
     const result = await generateProductAndWait(productForm, (progress) => {
-      loadingMessage.value = progress.message
-      loadingProgress.value = progress.progress
-      
-      // 단계별 로딩 상태 업데이트
-      if (progress.step === 'processing') {
-        if (progress.progress >= 50) {
-          loadingMessage.value = '이미지를 생성하고 있습니다...'
-        } else {
-          loadingMessage.value = '설명을 생성하고 있습니다...'
-        }
-      }
+      // 진행 상황 로깅만 유지
+      console.log('생성 진행:', progress.message)
     })
     
     currentJobId.value = result.jobId
+    
+    // API 완료 후 모달 닫기
+    loading.value = false
     
     // 텍스트 결과 처리
     if (result.textData && result.textData.description) {
@@ -354,13 +284,6 @@ const handleGenerateProduct = async () => {
       imageLoading.value = false
     }
     
-    loadingMessage.value = '생성 완료!'
-    loadingProgress.value = 100
-    
-    setTimeout(() => {
-      loading.value = false
-    }, 1000)
-    
   } catch (error) {
     console.error('생성 실패:', error)
     loading.value = false
@@ -371,18 +294,21 @@ const handleGenerateProduct = async () => {
   }
 }
 
-// 상품 저장 (TODO: 실제 API 연동)
+
 const saveProduct = async () => {
   saving.value = true
   
   try {
-    // TODO: 실제 저장 API 호출
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 상품이 이미 DB에 저장되어 있으므로 별도 저장 없이 바로 이동
+    console.log('상품이 생성되었습니다:', {
+      jobId: currentJobId.value,
+      productName: productForm.product_name
+    })
     
-    // 저장 완료 후 리다이렉트
-    router.push('/mypage')
+    // 내가 만든 상품 페이지로 이동
+    router.push('/my-products')
   } catch (error) {
-    errorMessage.value = '저장 중 오류가 발생했습니다.'
+    errorMessage.value = '이동 중 오류가 발생했습니다.'
   } finally {
     saving.value = false
   }

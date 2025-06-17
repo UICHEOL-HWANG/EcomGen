@@ -20,6 +20,9 @@ def lambda_handler(event, context):
             price = body.get("price")
             keywords = body.get("keywords", [])
             tone = body.get("tone")
+            
+            # 🐛 디버깅: Lambda에서 받은 키워드 로그
+            logger.info(f"[DEBUG] Lambda에서 받은 키워드 - Job ID: {job_id}, Keywords: {keywords}")
 
             if not all([job_id, user_id, product_name, category, price, tone]):
                 logger.error(f"필수 필드 누락 - Job ID: {job_id}")
@@ -121,6 +124,9 @@ def lambda_handler(event, context):
                 "prompt": prompt,
                 "description": description
             }
+            
+            # 🐛 디버깅: 콜백 페이로드 키워드 로그
+            logger.info(f"[DEBUG] 콜백 페이로드 키워드 - Job ID: {job_id}, Keywords: {callback_payload['keywords']}")
 
             # 콜백 전송 (재시도 로직 추가)
             max_callback_attempts = 3
@@ -129,6 +135,8 @@ def lambda_handler(event, context):
                     cb_resp = requests.post(callback_url, json=callback_payload, timeout=30)
                     if cb_resp.status_code == 200:
                         logger.info(f"FastAPI 콜백 성공 - Job ID: {job_id}")
+                        # 🐛 디버깅: 콜백 응답 로그
+                        logger.info(f"[DEBUG] 콜백 응답 - Job ID: {job_id}, Response: {cb_resp.text}")
                         break
                     else:
                         logger.error(f"FastAPI 콜백 실패 - Job ID: {job_id}, 상태코드: {cb_resp.status_code}, 응답: {cb_resp.text}")

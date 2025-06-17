@@ -17,6 +17,7 @@
             v-model="form.email"
             type="email"
             required
+            autocomplete="email"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             placeholder="이메일을 입력하세요"
           />
@@ -30,6 +31,7 @@
             v-model="form.password"
             type="password"
             required
+            autocomplete="current-password"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             placeholder="비밀번호를 입력하세요"
           />

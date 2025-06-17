@@ -55,6 +55,7 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold text-gray-900">🔥 다른 회원들의 추천 상품</h2>
         <button 
+          v-if="!loadingRecommended && recommendedProducts.length > 0 && recommendedProducts[0].id > 0"
           @click="goToRecommendedProducts"
           class="text-sm text-blue-600 hover:text-blue-700"
         >
@@ -62,9 +63,33 @@
         </button>
       </div>
       
-      <!-- 스라이드 컨테이너 -->
+      <!-- 슬라이드 컨테이너 -->
       <div class="overflow-x-auto scrollbar-hide">
-        <div class="flex gap-3 pb-2" style="width: max-content;">
+        <!-- 로딩 상태 -->
+        <div v-if="loadingRecommended" class="flex gap-3 pb-2" style="width: max-content;">
+          <div 
+            v-for="n in 6" 
+            :key="n"
+            class="bg-white rounded-xl border border-gray-200 shadow-sm flex-shrink-0 w-40 animate-pulse"
+          >
+            <div class="w-full h-32 bg-gray-200 rounded-t-xl"></div>
+            <div class="p-3">
+              <div class="h-4 bg-gray-200 rounded mb-2"></div>
+              <div class="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 빈 상태 (데이터가 없거나 에러) -->
+        <div v-else-if="recommendedProducts.length === 0 || recommendedProducts[0].id <= 0" class="text-center py-8">
+          <div class="text-4xl mb-3">📦</div>
+          <h3 class="text-md font-semibold text-gray-900 mb-2">아직 등록된 상품이 없습니다</h3>
+          <p class="text-sm text-gray-600">다른 회원들이 AI로 생성한 상품들이 곧 표시될 예정입니다</p>
+        </div>
+        
+        <!-- 상품 목록 -->
+        <div v-else class="flex gap-3 pb-2" style="width: max-content;">
           <div 
             v-for="product in recommendedProducts" 
             :key="product.id"
@@ -72,8 +97,17 @@
           >
             <!-- 상품 이미지 -->
             <div class="relative">
-              <div class="w-full h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-xl flex items-center justify-center">
-                <span class="text-3xl">{{ product.emoji }}</span>
+              <div class="w-full h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-xl flex items-center justify-center overflow-hidden">
+                <img 
+                  v-if="product.imageUrl" 
+                  :src="product.imageUrl" 
+                  :alt="product.username"
+                  class="w-full h-full object-cover"
+                  @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+                />
+                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+                  <span class="text-3xl">{{ product.emoji }}</span>
+                </div>
               </div>
               <div class="absolute top-2 right-2 bg-white rounded-full px-2 py-1 text-xs text-gray-600 shadow-sm">
                 AI 생성
@@ -334,9 +368,10 @@ AI 리포트 기능은 로그인 후<br />
 </template>
 
 <script setup>
-import { ref, Teleport } from 'vue'
+import { ref, Teleport, onMounted } from 'vue'
 import { useUserStore } from '@/store/userStore'
 import { useRouter } from 'vue-router'
+import { getRecommendedProducts } from '@/api/products.js'
 
 // Store 및 Router 초기화
 const userStore = useUserStore()
@@ -462,51 +497,56 @@ const goToRecommendedProducts = () => {
   router.push('/recommended-products')
 }
 
-// 추천 상품 데이터 (실제로는 API에서 가져올 데이터)
-const recommendedProducts = ref([
-  {
-    id: 1,
-    name: '미니멀 화이트 스니커즈',
-    user: '김소영',
-    price: '89,000원',
-    emoji: '👟'
-  },
-  {
-    id: 2,
-    name: '베이직 롱트 코트',
-    user: '박지훈',
-    price: '156,000원',
-    emoji: '🧥'
-  },
-  {
-    id: 3,
-    name: '오가닉 코튼 티셔츠',
-    user: '이민준',
-    price: '32,000원',
-    emoji: '👕'
-  },
-  {
-    id: 4,
-    name: '레더 크로스백',
-    user: '정수연',
-    price: '89,000원',
-    emoji: '🎒'
-  },
-  {
-    id: 5,
-    name: '블루투스 이어폰',
-    user: '최대호',
-    price: '128,000원',
-    emoji: '🎧'
-  },
-  {
-    id: 6,
-    name: '스마트워치 블랙',
-    user: '송은지',
-    price: '245,000원',
-    emoji: '⌚'
+// 추천 상품 데이터
+const recommendedProducts = ref([])
+const loadingRecommended = ref(false)
+
+// 추천 상품 로드 함수
+const loadRecommendedProducts = async () => {
+  try {
+    loadingRecommended.value = true
+    const response = await getRecommendedProducts(6) // 홈 화면에서는 6개만 표시
+    
+    // API 응답 데이터를 UI 형식에 맞게 변환
+    const transformedProducts = response.map(product => ({
+      id: product.id,
+      name: product.product_name,
+      user: product.username,
+      price: product.price ? `${product.price.toLocaleString()}원` : '가격미정',
+      emoji: getCategoryEmoji(product.category),
+      imageUrl: product.image_url
+    }))
+    
+    recommendedProducts.value = transformedProducts
+    
+  } catch (error) {
+    console.error('추천 상품 로드 실패:', error)
+    // 에러 시 빈 배열 반환 (중앙 메시지로 처리)
+    recommendedProducts.value = []
+  } finally {
+    loadingRecommended.value = false
   }
-])
+}
+
+// 카테고리별 이모지 매핑
+const getCategoryEmoji = (category) => {
+  const emojiMap = {
+    '패션': '👕',
+    '전자제품': '📱',
+    '홈/리빙': '🏠',
+    '뷰티': '💄',
+    '스포츠': '⚽',
+    '도서': '📚',
+    '식품': '🍎',
+    '기타': '📦'
+  }
+  return emojiMap[category] || '📦'
+}
+
+// 컴포넌트 마운트 시 추천 상품 로드
+onMounted(() => {
+  loadRecommendedProducts()
+})
 </script>
 
 <style scoped>

@@ -1,44 +1,118 @@
 import axios from 'axios'
 
+// 모바일 감지
+const isMobile = () => {
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  timeout: 5000,
-  withCredentials: true, // Access/Refresh 쿠키 자동 포함
+  timeout: 10000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-
-function getCSRFToken() {
-  const match = document.cookie.match(/(^|;)\s*csrf_token=([^;]+)/)
-  return match ? match[2] : null
-}
-
 axiosInstance.interceptors.request.use(
   (config) => {
-    const csrfToken = getCSRFToken()
+    // CSRF 토큰을 매번 새로 가져오기 (안전한 접근)
+    let csrfToken = null
+    try {
+      csrfToken = sessionStorage.getItem('csrf_token')
+    } catch (e) {
+      // sessionStorage 접근 실패 시 무시
+    }
+    
     if (csrfToken) {
       config.headers['X-CSRF-Token'] = csrfToken
     }
+    
+    // 모바일만 Authorization 헤더 사용
+    if (isMobile()) {
+      const accessToken = sessionStorage.getItem('access_token')
+      if (accessToken) {
+        config.headers['Authorization'] = `Bearer ${accessToken}`
+      }
+      
+      // refresh 요청일 때 X-Refresh-Token 헤더 추가 (모바일만)
+      if (config.url === '/auth/refresh') {
+        const refreshToken = sessionStorage.getItem('refresh_token')
+        if (refreshToken) {
+          config.headers['X-Refresh-Token'] = refreshToken
+        }
+      }
+    }
+    
     return config
   },
   (error) => Promise.reject(error)
 )
 
+let isRefreshing = false
+let failedQueue = []
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
 
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401 && !error.config._retry) {
-      error.config._retry = true
+    const originalRequest = error.config
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url === '/auth/refresh') {
+        // 모바일만 sessionStorage 삭제
+        if (isMobile()) {
+          sessionStorage.removeItem('access_token')
+          sessionStorage.removeItem('refresh_token')
+        }
+        sessionStorage.removeItem('csrf_token')
+        window.location.href = '/login'
+        return Promise.reject(error)
+      }
+      
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
+        }).then(() => {
+          return axiosInstance(originalRequest)
+        })
+      }
+      
+      originalRequest._retry = true
+      isRefreshing = true
+      
       try {
-        await axiosInstance.post('/auth/refresh') // refresh 토큰으로 access 갱신
-        return axiosInstance(error.config) // 요청 재시도
+        const refreshResponse = await axiosInstance.post('/auth/refresh')
+        if (refreshResponse.data.csrf_token) {
+          sessionStorage.setItem('csrf_token', refreshResponse.data.csrf_token)
+        }
+        
+        processQueue(null, refreshResponse.data.csrf_token)
+        return axiosInstance(originalRequest)
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError)
-        // redirect to login if needed
+        processQueue(refreshError, null)
+        
+        // 모바일만 sessionStorage 삭제
+        if (isMobile()) {
+          sessionStorage.removeItem('access_token')
+          sessionStorage.removeItem('refresh_token')
+        }
+        sessionStorage.removeItem('csrf_token')
+        
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
     return Promise.reject(error)
