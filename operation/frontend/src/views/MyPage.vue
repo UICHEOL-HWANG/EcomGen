@@ -538,6 +538,13 @@ const deleteError = ref('')
 const showAllCategories = ref(false)
 const maxDisplayCategories = 6 // 최대 표시 카테고리 수
 
+// 차트 애니메이션 관련 상태 추가
+const chartAnimation = ref({
+  progress: 0,
+  duration: 1000, // 1초 애니메이션
+  isAnimating: false
+})
+
 // 통계 관련 상태
 const stats = ref(null)
 const statsLoading = ref(false)
@@ -662,7 +669,7 @@ const getCategoryColor = (category) => {
   return availableColor
 }
 
-// 간단한 도넛 차트 그리기 (Canvas API 사용)
+// 간단한 도넛 차트 그리기 (부드러운 애니메이션 적용)
 const drawChart = () => {
   if (!categoryChart.value || !stats.value?.category_breakdown) {
     console.log('차트 그리기 조건 불충족:', {
@@ -672,6 +679,41 @@ const drawChart = () => {
     return
   }
   
+  // 애니메이션 시작
+  startChartAnimation()
+}
+
+// 차트 애니메이션 시작
+const startChartAnimation = () => {
+  chartAnimation.value.progress = 0
+  chartAnimation.value.isAnimating = true
+  
+  const startTime = performance.now()
+  
+  const animate = (currentTime) => {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / chartAnimation.value.duration, 1)
+    
+    // Ease-out 애니메이션 커브 (부드럽게 끝남)
+    chartAnimation.value.progress = 1 - Math.pow(1 - progress, 3)
+    
+    // 차트 그리기
+    drawAnimatedChart()
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate)
+    } else {
+      chartAnimation.value.isAnimating = false
+      // 애니메이션 완료 후 마우스 이벤트를 위한 최종 슬라이스 정보 생성
+      generateSliceInfo()
+    }
+  }
+  
+  requestAnimationFrame(animate)
+}
+
+// 애니메이션이 적용된 차트 그리기
+const drawAnimatedChart = () => {
   const canvas = categoryChart.value
   const ctx = canvas.getContext('2d')
   
@@ -688,7 +730,6 @@ const drawChart = () => {
   ctx.clearRect(0, 0, 160, 160)
   
   const categories = Object.entries(stats.value.category_breakdown)
-  console.log('차트 데이터:', categories)
   
   if (categories.length === 0) {
     ctx.beginPath()
@@ -703,24 +744,70 @@ const drawChart = () => {
   
   let currentAngle = -Math.PI / 2 // 12시 방향부터 시작
   
-  // 차트 슬라이스 정보 초기화
+  categories.forEach(([category, count], index) => {
+    const sliceAngle = (count / total) * 2 * Math.PI
+    
+    // 애니메이션 지연: 각 슬라이스마다 순차적으로 나타나게
+    const animationDelay = (index / categories.length) * 0.4 // 40% 지연
+    const sliceProgress = Math.max(0, Math.min(1, (chartAnimation.value.progress - animationDelay) / (1 - animationDelay)))
+    const animatedSliceAngle = sliceAngle * sliceProgress
+    
+    // 최소 각도 보장 (작은 조각도 호버 가능하도록)
+    const minAngle = 0.15
+    const adjustedSliceAngle = animatedSliceAngle > 0 ? Math.max(animatedSliceAngle, Math.min(minAngle, sliceAngle)) : 0
+    
+    if (adjustedSliceAngle > 0) {
+      // 도넛 슬라이스 그리기
+      ctx.beginPath()
+      ctx.arc(centerX, centerY, outerRadius, currentAngle, currentAngle + adjustedSliceAngle)
+      ctx.arc(centerX, centerY, innerRadius, currentAngle + adjustedSliceAngle, currentAngle, true)
+      ctx.closePath()
+      
+      // 색상 설정 (애니메이션 진행률에 따른 투명도 조절)
+      const color = getCategoryColor(category)
+      const alpha = Math.min(1, sliceProgress + 0.2) // 최소 20% 투명도
+      
+      // 색상에 알파 값 추가
+      const hex = color.replace('#', '')
+      const r = parseInt(hex.substring(0, 2), 16)
+      const g = parseInt(hex.substring(2, 4), 16)
+      const b = parseInt(hex.substring(4, 6), 16)
+      
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
+      ctx.fill()
+      
+      // 테두리
+      ctx.strokeStyle = '#ffffff'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+    
+    currentAngle += sliceAngle // 전체 각도로 진행 (다음 슬라이스 위치 계산용)
+  })
+}
+
+// 애니메이션 완료 후 마우스 호버를 위한 슬라이스 정보 생성
+const generateSliceInfo = () => {
+  if (!stats.value?.category_breakdown) return
+  
+  const categories = Object.entries(stats.value.category_breakdown)
+  const total = Object.values(stats.value.category_breakdown).reduce((sum, count) => sum + count, 0)
+  
+  let currentAngle = -Math.PI / 2
   chartSlices.value = []
   
   categories.forEach(([category, count]) => {
     const sliceAngle = (count / total) * 2 * Math.PI
-    
-    // 최소 각도 보장 (작은 조각도 호버 가능하도록)
-    const minAngle = 0.15 // 더 크게 설정
+    const minAngle = 0.15
     const adjustedSliceAngle = Math.max(sliceAngle, minAngle)
     
-    // 각도 정규화 (0~2π 범위)
+    // 각도 정규화
     let normalizedStart = currentAngle
     if (normalizedStart < 0) normalizedStart += 2 * Math.PI
     
     let normalizedEnd = currentAngle + adjustedSliceAngle
     if (normalizedEnd < 0) normalizedEnd += 2 * Math.PI
     
-    // 슬라이스 정보 저장
     chartSlices.value.push({
       category,
       count,
@@ -732,28 +819,10 @@ const drawChart = () => {
       innerRadius: 35
     })
     
-    // 도넛 슬라이스 그리기
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, outerRadius, currentAngle, currentAngle + adjustedSliceAngle)
-    ctx.arc(centerX, centerY, innerRadius, currentAngle + adjustedSliceAngle, currentAngle, true)
-    ctx.closePath()
-    
-    // 색상 설정
-    const color = getCategoryColor(category)
-    ctx.fillStyle = color
-    ctx.fill()
-    
-    // 테두리
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 2
-    ctx.stroke()
-    
-    console.log(`카테고리: ${category}, 정규화 시작: ${normalizedStart.toFixed(3)}, 정규화 끝: ${normalizedEnd.toFixed(3)}`)
-    
     currentAngle += adjustedSliceAngle
   })
   
-  console.log('차트 그리기 완료')
+  console.log('차트 애니메이션 완료 및 슬라이스 정보 생성 완료')
 }
 
 // 차트 마우스 이벤트 처리

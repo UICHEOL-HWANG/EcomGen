@@ -71,13 +71,22 @@
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <label class="block text-lg font-semibold text-gray-900 mb-3">키워드 (선택사항)</label>
           <div class="space-y-3">
-            <input
-              v-model="keywordInput"
-              @keydown.enter.prevent="addKeyword"
-              type="text"
-              placeholder="키워드를 입력하고 Enter를 눌러주세요"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-            />
+            <div class="flex gap-2">
+              <input
+                v-model="keywordInput"
+                @keydown.enter.prevent="addKeyword"
+                type="text"
+                placeholder="키워드를 입력하세요 (쉼표로 구분 가능: 맛있는,신선한)"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              />
+              <button 
+                @click="addKeyword" 
+                type="button"
+                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                추가
+              </button>
+            </div>
             <div v-if="productForm.keywords.length > 0" class="flex flex-wrap gap-2">
               <span
                 v-for="(keyword, index) in productForm.keywords"
@@ -232,9 +241,28 @@ const currentJobId = ref('')
 
 // 키워드 추가
 const addKeyword = () => {
-  const keyword = keywordInput.value.trim()
-  if (keyword && !productForm.keywords.includes(keyword) && productForm.keywords.length < 5) {
-    productForm.keywords.push(keyword)
+  const inputValue = keywordInput.value.trim()
+  
+  if (!inputValue) {
+    return
+  }
+  
+  // 쉼표로 분리하여 여러 키워드 처리
+  const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k.length > 0)
+  
+  let addedCount = 0
+  for (const keyword of keywords) {
+    if (!productForm.keywords.includes(keyword) && productForm.keywords.length < 5) {
+      productForm.keywords.push(keyword)
+      addedCount++
+    }
+    
+    if (productForm.keywords.length >= 5) {
+      break
+    }
+  }
+  
+  if (addedCount > 0) {
     keywordInput.value = ''
   }
 }
