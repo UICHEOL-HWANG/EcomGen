@@ -1,5 +1,16 @@
 <template>
   <div class="px-4 py-6 pb-20">
+    <!-- 에러 메시지 표시 -->
+    <div v-if="errorMessage" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+      <p class="text-sm text-red-600">{{ errorMessage }}</p>
+      <button 
+        @click="loadMyProducts"
+        class="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+      >
+        다시 시도
+      </button>
+    </div>
+
     <!-- 헤더 -->
     <section class="mb-6">
       <div class="flex items-center justify-between">
@@ -21,7 +32,7 @@
           @click="showSortModal = true"
           class="w-10 h-10 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-50 transition"
         >
-          <span class="text-lg">↕️</span>
+          <span class="text-lg">⏏️</span>
         </button>
       </div>
     </section>
@@ -40,7 +51,7 @@
               <div class="text-xs text-gray-600">즐겨찾기</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-purple-600">{{ categories.length }}</div>
+              <div class="text-2xl font-bold text-purple-600">{{ Math.max(0, categories.length - 1) }}</div>
               <div class="text-xs text-gray-600">카테고리</div>
             </div>
           </div>
@@ -55,7 +66,7 @@
         <button 
           v-for="category in categories"
           :key="category"
-          @click="selectedCategory = category"
+          @click="onCategoryChange(category)"
           :class="[
             'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition flex-shrink-0',
             selectedCategory === category 
@@ -85,9 +96,9 @@
       </div>
 
       <!-- 상품 목록 -->
-      <div v-else-if="filteredProducts.length > 0" class="space-y-4">
+      <div v-else-if="myProducts.length > 0" class="space-y-4">
         <div 
-          v-for="product in filteredProducts" 
+          v-for="product in myProducts" 
           :key="product.id"
           @click="openProductDetail(product)"
           class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
@@ -96,7 +107,13 @@
             <div class="flex gap-4">
               <!-- 상품 이미지 -->
               <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span class="text-3xl">{{ product.emoji }}</span>
+                <img 
+                  v-if="product.imageUrl" 
+                  :src="product.imageUrl" 
+                  :alt="product.name"
+                  class="w-full h-full object-cover rounded-lg"
+                />
+                <span v-else class="text-3xl">{{ product.emoji }}</span>
               </div>
               
               <!-- 상품 정보 -->
@@ -191,7 +208,13 @@
         <!-- 상품 이미지 -->
         <div class="relative">
           <div class="w-full h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-            <span class="text-8xl">{{ selectedProduct.emoji }}</span>
+            <img 
+              v-if="selectedProduct.imageUrl" 
+              :src="selectedProduct.imageUrl" 
+              :alt="selectedProduct.name"
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-8xl">{{ selectedProduct.emoji }}</span>
           </div>
           <button 
             @click="selectedProduct = null"
@@ -260,6 +283,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/userStore'
+import { getMyProducts, deleteMyProduct } from '@/api/products'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -270,6 +294,11 @@ const selectedCategory = ref('전체')
 const selectedSort = ref('latest')
 const showSortModal = ref(false)
 const selectedProduct = ref(null)
+const errorMessage = ref('')
+
+// 실제 데이터
+const myProducts = ref([])
+const availableCategories = ref(['전체'])
 
 // 정렬 옵션
 const sortOptions = ref([
@@ -277,139 +306,120 @@ const sortOptions = ref([
   { value: 'oldest', label: '오래된순' },
   { value: 'name', label: '이름순' },
   { value: 'price_low', label: '가격 낮은순' },
-  { value: 'price_high', label: '가격 높은순' },
-  { value: 'favorite', label: '즐겨찾기 우선' }
+  { value: 'price_high', label: '가격 높은순' }
 ])
 
-// 내가 만든 상품 데이터 (실제로는 API에서 가져올 데이터)
-const myProducts = ref([
-  {
-    id: 1,
-    name: '미니멀 화이트 스니커즈',
-    description: '깔끔한 디자인의 화이트 스니커즈로 어떤 옷에도 잘 어울리는 기본 아이템입니다. 편안한 착용감과 세련된 실루엣으로 데일리 룩의 완성도를 높여줍니다.',
-    price: '89,000원',
-    emoji: '👟',
-    category: '패션',
-    createdAt: '2024-01-15',
-    isFavorite: true
-  },
-  {
-    id: 2,
-    name: '베이직 롱 코트',
-    description: '가을과 겨울을 위한 따뜻하고 스타일리시한 롱 코트입니다. 고급스러운 울 소재로 제작되어 보온성과 패션성을 모두 만족시킵니다.',
-    price: '156,000원',
-    emoji: '🧥',
-    category: '패션',
-    createdAt: '2024-01-10',
-    isFavorite: false
-  },
-  {
-    id: 3,
-    name: '블루투스 이어폰',
-    description: '고음질 사운드와 긴 배터리 수명을 자랑하는 무선 이어폰입니다. 액티브 노이즈 캐슬링 기능으로 몰입감 있는 음악 감상이 가능합니다.',
-    price: '128,000원',
-    emoji: '🎧',
-    category: '전자제품',
-    createdAt: '2024-01-08',
-    isFavorite: true
-  },
-  {
-    id: 4,
-    name: '아로마 디퓨저',
-    description: '자연스러운 향기로 공간을 채워주는 우드 디퓨저입니다. 타이머 기능과 LED 조명으로 분위기까지 연출할 수 있습니다.',
-    price: '45,000원',
-    emoji: '🕯️',
-    category: '홈/리빙',
-    createdAt: '2024-01-05',
-    isFavorite: false
-  },
-  {
-    id: 5,
-    name: '비타민 C 세럼',
-    description: '순수 비타민 C 20% 함유로 피부 톤업과 탄력 개선에 효과적입니다. 민감한 피부도 안심하고 사용할 수 있는 순한 성분으로 제작되었습니다.',
-    price: '38,000원',
-    emoji: '🧴',
-    category: '뷰티',
-    createdAt: '2024-01-03',
-    isFavorite: true
+// 유틸리티 함수들
+const getEmojiForCategory = (category) => {
+  const emojiMap = {
+    '패션': '👕',
+    '의류': '👔',
+    '신발': '👟',
+    '전자제품': '📱',
+    '가전제품': '📺',
+    '홈/리빙': '🏠',
+    '가구': '🪑',
+    '뷰티': '💄',
+    '화장품': '💅',
+    '음식': '🍔',
+    '식품': '🥘',
+    '스포츠': '⚽',
+    '운동': '🏃',
+    '도서': '📚',
+    '문구': '✏️',
+    '자동차': '🚗',
+    '반려동물': '🐕',
+    '육아': '👶',
+    '기타': '📦'
   }
-])
+  return emojiMap[category] || '📦'
+}
 
-// 카테고리 목록 (동적으로 생성)
-const categories = computed(() => {
-  const uniqueCategories = [...new Set(myProducts.value.map(p => p.category))]
-  return ['전체', ...uniqueCategories]
-})
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-// 즐겨찾기 상품들
+// 실제 데이터 로드 함수
+const loadMyProducts = async () => {
+  try {
+    loading.value = true
+    errorMessage.value = ''
+    
+    const response = await getMyProducts({
+      category: selectedCategory.value === '전체' ? null : selectedCategory.value,
+      sort_by: selectedSort.value,
+      limit: 50,
+      offset: 0
+    })
+    
+    // 데이터 변환
+    myProducts.value = response.products.map(product => ({
+      id: product.id,
+      name: product.product_name,
+      description: product.description,
+      price: product.price ? `${product.price.toLocaleString()}원` : '가격 미정',
+      emoji: getEmojiForCategory(product.category),
+      category: product.category || '기타',
+      createdAt: formatDate(product.created_at),
+      imageUrl: product.image_url,
+      isFavorite: false, // TODO: 즐겨찾기 기능 추가 시 수정
+      keywords: product.keywords || [],
+      tone: product.tone,
+      jobId: product.job_id
+    }))
+    
+    // 카테고리 목록 업데이트 
+    availableCategories.value = ['전체', ...response.categories]
+    
+  } catch (error) {
+    console.error('상품 로드 실패:', error)
+    errorMessage.value = error.message
+    myProducts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 계산된 속성들
+const categories = computed(() => availableCategories.value)
+
 const favoriteProducts = computed(() => {
   return myProducts.value.filter(p => p.isFavorite)
 })
 
-// 필터된 상품 목록
-const filteredProducts = computed(() => {
-  let filtered = myProducts.value
+// 이벤트 핸들러들
+const onCategoryChange = async (category) => {
+  selectedCategory.value = category
+  await loadMyProducts()
+}
 
-  // 카테고리 필터
-  if (selectedCategory.value !== '전체') {
-    filtered = filtered.filter(product => product.category === selectedCategory.value)
-  }
+const applySort = async () => {
+  showSortModal.value = false
+  await loadMyProducts()
+}
 
-  // 정렬
-  if (selectedSort.value === 'latest') {
-    filtered = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  } else if (selectedSort.value === 'oldest') {
-    filtered = [...filtered].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-  } else if (selectedSort.value === 'name') {
-    filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name))
-  } else if (selectedSort.value === 'price_low') {
-    filtered = [...filtered].sort((a, b) => {
-      const priceA = parseInt(a.price.replace(/[^0-9]/g, ''))
-      const priceB = parseInt(b.price.replace(/[^0-9]/g, ''))
-      return priceA - priceB
-    })
-  } else if (selectedSort.value === 'price_high') {
-    filtered = [...filtered].sort((a, b) => {
-      const priceA = parseInt(a.price.replace(/[^0-9]/g, ''))
-      const priceB = parseInt(b.price.replace(/[^0-9]/g, ''))
-      return priceB - priceA
-    })
-  } else if (selectedSort.value === 'favorite') {
-    filtered = [...filtered].sort((a, b) => (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0))
-  }
-
-  return filtered
-})
-
-// 뒤로 가기
 const goBack = () => {
   router.go(-1)
 }
 
-// 상품 상세 보기
 const openProductDetail = (product) => {
   selectedProduct.value = product
 }
 
-// 즐겨찾기 토글
 const toggleFavorite = (product) => {
   product.isFavorite = !product.isFavorite
   // TODO: API 호출로 서버에 즐겨찾기 상태 저장
 }
 
-// 정렬 적용
-const applySort = () => {
-  showSortModal.value = false
-  // computed에서 자동으로 정렬됨
-}
-
-// 상품 수정
 const editProduct = (product) => {
   // TODO: 상품 수정 페이지로 이동
   router.push(`/generate?edit=${product.id}`)
 }
 
-// 상품 공유
 const shareProduct = (product) => {
   if (navigator.share) {
     navigator.share({
@@ -425,23 +435,23 @@ const shareProduct = (product) => {
   }
 }
 
-// 상품 삭제
-const deleteProduct = (product) => {
+const deleteProduct = async (product) => {
   if (confirm(`"${product.name}" 상품을 삭제하시겠습니까?`)) {
-    const index = myProducts.value.findIndex(p => p.id === product.id)
-    if (index > -1) {
-      myProducts.value.splice(index, 1)
+    try {
+      await deleteMyProduct(product.id)
       selectedProduct.value = null
-      // TODO: API 호출로 서버에서 삭제
+      await loadMyProducts() // 목록 새로고침
+      alert('상품이 성공적으로 삭제되었습니다.')
+    } catch (error) {
+      console.error('상품 삭제 실패:', error)
+      alert('상품 삭제에 실패했습니다.')
     }
   }
 }
 
 // 컴포넌트 마운트 시
 onMounted(async () => {
-  // TODO: 실제로는 API에서 내가 만든 상품 목록 로드
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  loading.value = false
+  await loadMyProducts()
 })
 </script>
 

@@ -32,10 +32,10 @@
 
     <!-- 1단계: 상품 정보 입력 -->
     <section v-if="currentStep === 1" class="space-y-6">
-      <form @submit.prevent="handleGenerateProduct" class="space-y-4">
+      <form @submit.prevent="handleGenerateProduct" class="space-y-6">
         <!-- 상품명 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">상품명 *</label>
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">상품명 *</label>
           <input
             v-model="productForm.product_name"
             type="text"
@@ -45,31 +45,14 @@
           />
         </div>
 
-        <!-- 카테고리 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">카테고리 *</label>
-          <select
-            v-model="productForm.category"
-            required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-          >
-            <option value="">카테고리를 선택하세요</option>
-            <option value="패션">패션</option>
-            <option value="신발">신발</option>
-            <option value="가방">가방</option>
-            <option value="악세서리">악세서리</option>
-            <option value="전자제품">전자제품</option>
-            <option value="가전제품">가전제품</option>
-            <option value="스포츠">스포츠</option>
-            <option value="뷰티">뷰티</option>
-            <option value="홈인테리어">홈인테리어</option>
-            <option value="기타">기타</option>
-          </select>
+        <!-- 카테고리 선택기 -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <CategorySelector v-model="productForm.category" />
         </div>
 
         <!-- 가격 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">예상 가격 *</label>
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">예상 가격 *</label>
           <div class="relative">
             <input
               v-model.number="productForm.price"
@@ -85,9 +68,9 @@
         </div>
 
         <!-- 키워드 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">키워드 (선택사항)</label>
-          <div class="space-y-2">
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <label class="block text-lg font-semibold text-gray-900 mb-3">키워드 (선택사항)</label>
+          <div class="space-y-3">
             <input
               v-model="keywordInput"
               @keydown.enter.prevent="addKeyword"
@@ -108,48 +91,26 @@
           </div>
         </div>
 
-        <!-- 톤앤매너 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">톤앤매너 *</label>
-          <div class="grid grid-cols-2 gap-3">
-            <label
-              v-for="tone in toneOptions"
-              :key="tone.value"
-              class="relative cursor-pointer"
-            >
-              <input
-                v-model="productForm.tone"
-                :value="tone.value"
-                type="radio"
-                class="sr-only"
-              />
-              <div
-                class="p-3 border-2 rounded-lg text-center transition-all"
-                :class="productForm.tone === tone.value 
-                  ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                  : 'border-gray-200 text-gray-700 hover:border-gray-300'"
-              >
-                <div class="text-lg mb-1">{{ tone.emoji }}</div>
-                <div class="text-sm font-medium">{{ tone.label }}</div>
-                <div class="text-xs text-gray-500">{{ tone.description }}</div>
-              </div>
-            </label>
-          </div>
+        <!-- 톤 선택기 -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <ToneSelector v-model="productForm.tone" />
         </div>
 
         <!-- 에러 메시지 -->
-        <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div v-if="errorMessage" class="p-4 bg-red-50 border border-red-200 rounded-xl">
           <p class="text-sm text-red-600">{{ errorMessage }}</p>
         </div>
 
         <!-- 생성 버튼 -->
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full py-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-        >
-          {{ loading ? 'AI가 생성 중입니다...' : '🎨 AI로 상품 생성하기' }}
-        </button>
+        <div class="pt-4">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 text-lg"
+          >
+            {{ loading ? 'AI가 생성 중입니다...' : '🎨 AI로 상품 생성하기' }}
+          </button>
+        </div>
       </form>
     </section>
 
@@ -207,7 +168,7 @@
           :disabled="saving"
           class="flex-1 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
         >
-          {{ saving ? '저장 중...' : '저장하기' }}
+          {{ saving ? '내 상품으로 이동 중...' : '내 상품 보기' }}
         </button>
       </div>
     </section>
@@ -233,6 +194,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateProductAndWait } from '@/api/generate.js'
+import CategorySelector from '@/components/CategorySelector.vue'
+import ToneSelector from '@/components/ToneSelector.vue'
 
 const router = useRouter()
 
@@ -250,34 +213,6 @@ const productForm = reactive({
 
 // 키워드 입력
 const keywordInput = ref('')
-
-// 톤앤매너 옵션
-const toneOptions = [
-  {
-    value: 'professional',
-    label: '전문적',
-    description: '신뢰할 수 있는',
-    emoji: '💼'
-  },
-  {
-    value: 'friendly',
-    label: '친근한',
-    description: '따뜻하고 편안한',
-    emoji: '😊'
-  },
-  {
-    value: 'luxury',
-    label: '럭셔리',
-    description: '고급스러운',
-    emoji: '✨'
-  },
-  {
-    value: 'casual',
-    label: '캐주얼',
-    description: '자연스러운',
-    emoji: '👕'
-  }
-]
 
 // 상태 관리
 const loading = ref(false)
@@ -371,18 +306,21 @@ const handleGenerateProduct = async () => {
   }
 }
 
-// 상품 저장 (TODO: 실제 API 연동)
+
 const saveProduct = async () => {
   saving.value = true
   
   try {
-    // TODO: 실제 저장 API 호출
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 상품이 이미 DB에 저장되어 있으므로 별도 저장 없이 바로 이동
+    console.log('상품이 생성되었습니다:', {
+      jobId: currentJobId.value,
+      productName: productForm.product_name
+    })
     
-    // 저장 완료 후 리다이렉트
-    router.push('/mypage')
+    // 내가 만든 상품 페이지로 이동
+    router.push('/my-products')
   } catch (error) {
-    errorMessage.value = '저장 중 오류가 발생했습니다.'
+    errorMessage.value = '이동 중 오류가 발생했습니다.'
   } finally {
     saving.value = false
   }

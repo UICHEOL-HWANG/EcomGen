@@ -1,5 +1,89 @@
 <template>
   <div class="px-4 py-6">
+    <!-- 내 활동 요약 -->
+    <section class="mb-6">
+      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-100 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          📊 내 활동 요약
+        </h3>
+        
+        <!-- 로딩 상태 -->
+        <div v-if="statsLoading" class="animate-pulse">
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-white/70 rounded-lg p-4">
+              <div class="h-8 bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div class="bg-white/70 rounded-lg p-4">
+              <div class="h-8 bg-gray-200 rounded mb-2"></div>
+              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </div>
+          <div class="h-32 bg-white/70 rounded-lg"></div>
+        </div>
+        
+        <!-- 통계 데이터 -->
+        <div v-else-if="stats && stats.total_products > 0" class="space-y-4">
+          <!-- 주요 지표 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white/70 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-blue-600">{{ stats.total_products }}</div>
+              <div class="text-sm text-gray-600">생성한 상품</div>
+            </div>
+            <div class="bg-white/70 rounded-lg p-4 text-center">
+              <div class="text-2xl font-bold text-green-600">{{ Math.round(stats.completion_rate) }}%</div>
+              <div class="text-sm text-gray-600">완성도</div>
+            </div>
+          </div>
+          
+          <!-- 카테고리별 분포 -->
+          <div v-if="Object.keys(stats.category_breakdown).length > 0" class="bg-white/70 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">카테고리별 분포</h4>
+            <div class="space-y-2">
+              <div v-for="(count, category) in stats.category_breakdown" :key="category" 
+                   class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: getCategoryColor(category) }"></div>
+                  <span class="text-sm text-gray-600">{{ category }}</span>
+                </div>
+                <span class="text-sm font-medium text-gray-900">{{ count }}개</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 간단한 도넛 차트 영역 (나중에 Chart.js로 구현) -->
+          <div v-if="Object.keys(stats.category_breakdown).length > 0" class="bg-white/70 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">카테고리 분포 차트</h4>
+            <div class="flex justify-center">
+              <canvas ref="categoryChart" width="200" height="200" class="max-w-[200px] max-h-[200px]"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 에러 상태 -->
+        <div v-else class="text-center py-6">
+          <div class="text-4xl mb-3">📊</div>
+          <h4 class="text-md font-semibold text-gray-900 mb-2">아직 집계된 데이터가 없습니다</h4>
+          <p class="text-sm text-gray-600 mb-4">AI로 상품을 생성하시면<br />활동 통계를 확인할 수 있어요</p>
+          <div class="flex gap-2 justify-center">
+            <button 
+              @click="goToGenerate"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2"
+            >
+              <span>✨</span>
+              상품 생성하기
+            </button>
+            <button 
+              @click="loadStats"
+              class="px-3 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition text-sm"
+            >
+              새로고침
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 사용자 정보 카드 -->
     <section class="mb-6">
       <div class="bg-white rounded-xl border border-gray-200 p-6 text-center">
@@ -137,6 +221,7 @@
               v-model="editForm.username"
               type="text"
               required
+              autocomplete="name"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -180,6 +265,7 @@
               v-model="passwordForm.currentPassword"
               type="password"
               required
+              autocomplete="current-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -190,6 +276,7 @@
               v-model="passwordForm.newPassword"
               type="password"
               required
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -200,6 +287,7 @@
               v-model="passwordForm.confirmPassword"
               type="password"
               required
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
             />
           </div>
@@ -381,10 +469,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, Transition } from 'vue'
+import { ref, onMounted, Transition, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/userStore'
 import { updateMyInfo, changePassword, deleteAccount, uploadProfileImage, deleteProfileImage } from '@/api/auth'
+import { getMyProductsStats } from '@/api/products'
 import CameraCapture from '@/components/CameraCapture.vue'
 
 const router = useRouter()
@@ -415,14 +504,98 @@ const editError = ref('')
 const passwordError = ref('')
 const deleteError = ref('')
 
+// 통계 관련 상태
+const stats = ref(null)
+const statsLoading = ref(false)
+const categoryChart = ref(null)
+
 // 컴포넌트 마운트 시 사용자 정보로 폼 초기화
-onMounted(() => {
+onMounted(async () => {
   if (userStore.user) {
     editForm.value = {
       username: userStore.user.username || userStore.user.name || ''
     }
   }
+  
+  // 통계 데이터 로드
+  await loadStats()
 })
+
+// 통계 데이터 로드
+const loadStats = async () => {
+  try {
+    statsLoading.value = true
+    const response = await getMyProductsStats()
+    stats.value = response
+    
+    // 차트 그리기 (다음 틱에 실행)
+    await nextTick()
+    if (Object.keys(response.category_breakdown).length > 0) {
+      drawChart()
+    }
+  } catch (error) {
+    console.error('통계 로드 실패:', error)
+    stats.value = null
+  } finally {
+    statsLoading.value = false
+  }
+}
+
+// 카테고리별 색상 매핑
+const getCategoryColor = (category) => {
+  const colors = {
+    '패션': '#3B82F6',    // 파란색
+    '전자제품': '#10B981', // 초록색
+    '홈/리빙': '#F59E0B',  // 주황색
+    '뷰티': '#EF4444',      // 빨간색
+    '스포츠': '#8B5CF6',    // 보라색
+    '도서': '#06B6D4',      // 청록색
+    '식품': '#84CC16',      // 라임색
+    '기타': '#6B7280'       // 회색
+  }
+  return colors[category] || '#6B7280'
+}
+
+// Chart.js import 및 등록
+import { Chart, ArcElement, Tooltip, Legend } from 'chart.js'
+Chart.register(ArcElement, Tooltip, Legend)
+
+let chartInstance = null
+
+const drawChart = () => {
+  if (!categoryChart.value || !stats.value) return
+
+  const ctx = categoryChart.value.getContext('2d')
+  const data = stats.value.category_breakdown
+  const labels = Object.keys(data)
+  const counts = Object.values(data)
+  const backgroundColors = labels.map(getCategoryColor)
+
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: counts,
+        backgroundColor: backgroundColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      cutout: '60%'
+    }
+  })
+}
 
 // 로그아웃 처리
 const handleLogout = async () => {
@@ -541,6 +714,11 @@ const goToMyProducts = () => {
 // 내가 검색한 리포트 페이지로 이동
 const goToMyReports = () => {
   router.push('/my-reports')
+}
+
+// 상품 생성 페이지로 이동
+const goToGenerate = () => {
+  router.push('/generate')
 }
 
 // 갤러리에서 사진 선택

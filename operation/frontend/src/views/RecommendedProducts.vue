@@ -67,8 +67,17 @@
         >
           <!-- 상품 이미지 -->
           <div class="relative">
-            <div class="w-full h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-xl flex items-center justify-center">
-              <span class="text-6xl">{{ product.emoji }}</span>
+            <div class="w-full h-48 bg-gradient-to-br from-blue-100 to-purple-100 rounded-t-xl flex items-center justify-center overflow-hidden">
+              <img 
+                v-if="product.imageUrl" 
+                :src="product.imageUrl" 
+                :alt="product.name"
+                class="w-full h-full object-cover"
+                @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+              />
+              <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+                <span class="text-6xl">{{ product.emoji }}</span>
+              </div>
             </div>
             <div class="absolute top-3 right-3 bg-white rounded-full px-3 py-1 text-xs text-gray-600 shadow-sm">
               AI 생성
@@ -110,11 +119,30 @@
         </button>
       </div>
 
+      <!-- 에러 상태 -->
+      <div v-if="error && !loading" class="text-center py-12">
+        <div class="text-6xl mb-4">⚠️</div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">오류가 발생했습니다</h3>
+        <p class="text-gray-600 mb-4">{{ error }}</p>
+        <button 
+          @click="loadProducts()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          다시 시도
+        </button>
+      </div>
+
       <!-- 빈 상태 -->
-      <div v-if="!loading && filteredProducts.length === 0" class="text-center py-12">
-        <div class="text-6xl mb-4">🔍</div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">상품이 없습니다</h3>
-        <p class="text-gray-600">다른 카테고리를 선택해보세요</p>
+      <div v-else-if="!loading && !error && filteredProducts.length === 0" class="text-center py-12">
+        <div class="text-6xl mb-4">📦</div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">아직 등록된 상품이 없습니다</h3>
+        <p class="text-gray-600 mb-4">다른 회원들이 AI로 생성한 상품들이<br />곧 여기에 표시될 예정입니다</p>
+        <button 
+          @click="loadProducts()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          새로고침
+        </button>
       </div>
     </section>
 
@@ -181,8 +209,17 @@
       <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         <!-- 상품 이미지 -->
         <div class="relative">
-          <div class="w-full h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-            <span class="text-8xl">{{ selectedProduct.emoji }}</span>
+          <div class="w-full h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center overflow-hidden">
+            <img 
+              v-if="selectedProduct.imageUrl" 
+              :src="selectedProduct.imageUrl" 
+              :alt="selectedProduct.name"
+              class="w-full h-full object-cover"
+              @error="$event.target.style.display='none'; $event.target.nextElementSibling.style.display='flex'"
+            />
+            <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+              <span class="text-8xl">{{ selectedProduct.emoji }}</span>
+            </div>
           </div>
           <button 
             @click="selectedProduct = null"
@@ -226,6 +263,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { getRecommendedProducts } from '@/api/products.js'
 
 const router = useRouter()
 
@@ -268,89 +306,70 @@ const priceRanges = ref([
   { value: '200000+', label: '20만원 이상' }
 ])
 
-// 상품 데이터 (실제로는 API에서 가져올 데이터)
-const products = ref([
-  {
-    id: 1,
-    name: '미니멀 화이트 스니커즈',
-    description: '깔끔한 디자인의 화이트 스니커즈로 어떤 옷에도 잘 어울리는 기본 아이템입니다. 편안한 착용감과 세련된 실루엣으로 데일리 룩의 완성도를 높여줍니다.',
-    user: '김소영',
-    price: '89,000원',
-    emoji: '👟',
-    category: '패션',
-    createdAt: '2시간 전'
-  },
-  {
-    id: 2,
-    name: '베이직 롱 코트',
-    description: '가을과 겨울을 위한 따뜻하고 스타일리시한 롱 코트입니다. 고급스러운 울 소재로 제작되어 보온성과 패션성을 모두 만족시킵니다.',
-    user: '박지훈',
-    price: '156,000원',
-    emoji: '🧥',
-    category: '패션',
-    createdAt: '4시간 전'
-  },
-  {
-    id: 3,
-    name: '오가닉 코튼 티셔츠',
-    description: '100% 오가닉 코튼으로 만든 친환경 티셔츠입니다. 부드러운 촉감과 우수한 통기성으로 사계절 내내 편안하게 착용할 수 있습니다.',
-    user: '이민준',
-    price: '32,000원',
-    emoji: '👕',
-    category: '패션',
-    createdAt: '6시간 전'
-  },
-  {
-    id: 4,
-    name: '레더 크로스백',
-    description: '진짜 가죽으로 제작된 고급스러운 크로스백입니다. 컴팩트한 사이즈에 실용적인 수납공간으로 데일리 아이템으로 완벽합니다.',
-    user: '정수연',
-    price: '89,000원',
-    emoji: '🎒',
-    category: '패션',
-    createdAt: '8시간 전'
-  },
-  {
-    id: 5,
-    name: '블루투스 이어폰',
-    description: '고음질 사운드와 긴 배터리 수명을 자랑하는 무선 이어폰입니다. 액티브 노이즈 캐슬링 기능으로 몰입감 있는 음악 감상이 가능합니다.',
-    user: '최대호',
-    price: '128,000원',
-    emoji: '🎧',
-    category: '전자제품',
-    createdAt: '10시간 전'
-  },
-  {
-    id: 6,
-    name: '스마트워치 블랙',
-    description: '건강 관리와 스마트 기능을 한번에! 심박수, 운동량, 수면 패턴을 정확하게 측정하고 스마트폰과 연동되어 편리한 사용이 가능합니다.',
-    user: '송은지',
-    price: '245,000원',
-    emoji: '⌚',
-    category: '전자제품',
-    createdAt: '12시간 전'
-  },
-  {
-    id: 7,
-    name: '아로마 디퓨저',
-    description: '자연스러운 향기로 공간을 채워주는 우드 디퓨저입니다. 타이머 기능과 LED 조명으로 분위기까지 연출할 수 있습니다.',
-    user: '윤서진',
-    price: '45,000원',
-    emoji: '🕯️',
-    category: '홈/리빙',
-    createdAt: '1일 전'
-  },
-  {
-    id: 8,
-    name: '비타민 C 세럼',
-    description: '순수 비타민 C 20% 함유로 피부 톤업과 탄력 개선에 효과적입니다. 민감한 피부도 안심하고 사용할 수 있는 순한 성분으로 제작되었습니다.',
-    user: '김태영',
-    price: '38,000원',
-    emoji: '🧴',
-    category: '뷰티',
-    createdAt: '1일 전'
+// 상품 데이터
+const products = ref([])
+const error = ref(null)
+
+// 실제 데이터 로드 함수
+const loadProducts = async (limit = 20) => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    const response = await getRecommendedProducts(limit)
+    
+    // API 응답 데이터를 UI 형식에 맞게 변환
+    const transformedProducts = response.map(product => ({
+      id: product.id,
+      name: product.product_name,
+      description: product.description,
+      price: product.price ? `${product.price.toLocaleString()}원` : '가격미정',
+      category: product.category,
+      emoji: getCategoryEmoji(product.category),
+      user: '익명', // API에 사용자 정보가 없으므로 기본값
+      createdAt: formatDate(product.created_at),
+      imageUrl: product.image_url,
+      keywords: product.keywords,
+      tone: product.tone
+    }))
+    
+    products.value = transformedProducts
+    
+  } catch (err) {
+    console.error('추천 상품 로드 실패:', err)
+    error.value = err.message
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 카테고리별 이모지 매핑
+const getCategoryEmoji = (category) => {
+  const emojiMap = {
+    '패션': '👕',
+    '전자제품': '📱',
+    '홈/리빙': '🏠',
+    '뷰티': '💄',
+    '스포츠': '⚽',
+    '도서': '📚',
+    '식품': '🍎',
+    '기타': '📦'
+  }
+  return emojiMap[category] || '📦'
+}
+
+// 날짜 포맷팅
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
+  
+  if (diffInHours < 1) return '방금 전'
+  if (diffInHours < 24) return `${diffInHours}시간 전`
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return `${diffInDays}일 전`
+  return date.toLocaleDateString()
+}
 
 // 필터된 상품 목록
 const filteredProducts = computed(() => {
@@ -421,9 +440,7 @@ const resetFilters = () => {
 
 // 컴포넌트 마운트 시
 onMounted(async () => {
-  // 실제로는 API에서 상품 목록 로드
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  loading.value = false
+  await loadProducts()
 })
 </script>
 
