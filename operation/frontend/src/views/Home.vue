@@ -133,60 +133,48 @@
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center">
-              <span class="text-xl text-white">📊</span>
+              <span class="text-xl text-white">🤖</span>
             </div>
             <div>
               <h2 class="text-lg font-bold text-gray-900">AI 리포트</h2>
-              <p class="text-sm text-gray-600">시장 동향과 인사이트 분석</p>
+              <p class="text-sm text-gray-600">무엇이든 AI에게 물어보세요</p>
             </div>
           </div>
         </div>
         
-        <!-- 리포트 기능 카드들 -->
+        <!-- 빠른 질문 예시 카드들 -->
         <div class="grid grid-cols-2 gap-3 mb-4">
-          <button 
-            @click="goToReports('trends')"
-            class="bg-white/70 hover:bg-white rounded-xl p-4 text-left transition-all hover:shadow-sm"
-          >
+          <div class="bg-white/70 rounded-xl p-4 text-left">
             <div class="text-lg mb-2">📈</div>
             <h3 class="font-semibold text-gray-900 text-sm mb-1">트렌드 분석</h3>
-            <p class="text-xs text-gray-600">인기 카테고리와 키워드</p>
-          </button>
+            <p class="text-xs text-gray-600">시장 동향과 인기 상품</p>
+          </div>
           
-          <button 
-            @click="goToReports('performance')"
-            class="bg-white/70 hover:bg-white rounded-xl p-4 text-left transition-all hover:shadow-sm"
-          >
-            <div class="text-lg mb-2">🏆</div>
-            <h3 class="font-semibold text-gray-900 text-sm mb-1">성과 분석</h3>
-            <p class="text-xs text-gray-600">내 상품 성과 리포트</p>
-          </button>
+          <div class="bg-white/70 rounded-xl p-4 text-left">
+            <div class="text-lg mb-2">💰</div>
+            <h3 class="font-semibold text-gray-900 text-sm mb-1">비즈니스 전략</h3>
+            <p class="text-xs text-gray-600">창업과 운영 노하우</p>
+          </div>
           
-          <button 
-            @click="goToReports('market')"
-            class="bg-white/70 hover:bg-white rounded-xl p-4 text-left transition-all hover:shadow-sm"
-          >
+          <div class="bg-white/70 rounded-xl p-4 text-left">
+            <div class="text-lg mb-2">🎯</div>
+            <h3 class="font-semibold text-gray-900 text-sm mb-1">마케팅 인사이트</h3>
+            <p class="text-xs text-gray-600">효과적인 홍보 방법</p>
+          </div>
+          
+          <div class="bg-white/70 rounded-xl p-4 text-left">
             <div class="text-lg mb-2">🌐</div>
-            <h3 class="font-semibold text-gray-900 text-sm mb-1">시장 리서치</h3>
-            <p class="text-xs text-gray-600">경쟁 대비 분석</p>
-          </button>
-          
-          <button 
-            @click="goToReports('insights')"
-            class="bg-white/70 hover:bg-white rounded-xl p-4 text-left transition-all hover:shadow-sm"
-          >
-            <div class="text-lg mb-2">💡</div>
-            <h3 class="font-semibold text-gray-900 text-sm mb-1">인사이트</h3>
-            <p class="text-xs text-gray-600">AI 추천 전략</p>
-          </button>
+            <h3 class="font-semibold text-gray-900 text-sm mb-1">경쟁사 분석</h3>
+            <p class="text-xs text-gray-600">업계 동향 파악</p>
+          </div>
         </div>
         
         <!-- AI 에이전트 검색 버튼 -->
         <button 
-          @click="userStore.isAuthenticated ? showReportModal = true : showLoginModal = true"
+          @click="goToReportPage"
           class="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-xl hover:from-purple-600 hover:to-blue-600 transition-all"
         >
-          🔍 AI 에이전트에게 검색하기
+          🔍 AI에게 물어보기
         </button>
       </div>
     </section>
@@ -224,102 +212,6 @@
       </div>
     </section>
   </div>
-  
-  <!-- AI 에이전트 검색 모달 - Teleport로 body에 렌더링 -->
-  <Teleport to="body">
-    <div v-if="showReportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 9999;">
-      <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
-        <!-- 모달 헤더 -->
-        <div class="bg-gradient-to-r from-purple-500 to-blue-500 p-6 text-white">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-bold flex items-center gap-2">
-              🤖 AI 에이전트
-            </h3>
-            <button @click="closeReportModal" class="text-white/80 hover:text-white">✕</button>
-          </div>
-          <p class="text-sm text-white/90">시장 동향, 상품 분석, 전략 등 무엇이든 물어보세요!</p>
-        </div>
-        
-        <!-- 검색 영역 -->
-        <div class="p-6">
-          <!-- 빠른 질문 버튼들 -->
-          <div class="mb-4">
-            <p class="text-sm font-medium text-gray-700 mb-3">빠른 질문 예시:</p>
-            <div class="flex flex-wrap gap-2">
-              <button 
-                v-for="quickQuestion in quickQuestions"
-                :key="quickQuestion"
-                @click="searchQuery = quickQuestion"
-                class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 transition"
-              >
-                {{ quickQuestion }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- 검색 입력 -->
-          <form @submit.prevent="handleReportSearch" class="space-y-4">
-            <div>
-              <textarea
-                v-model="searchQuery"
-                placeholder="예: 이번 달 가장 인기 있는 패션 카테고리는 무엇인가요?"
-                rows="3"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition resize-none"
-              ></textarea>
-            </div>
-            
-            <button
-              type="submit"
-              :disabled="!searchQuery.trim() || isSearching"
-              class="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transition disabled:opacity-50"
-            >
-              {{ isSearching ? '분석 중...' : '🔍 AI에게 물어보기' }}
-            </button>
-          </form>
-          
-          <!-- 검색 결과 -->
-          <div v-if="searchResult" class="mt-6 p-4 bg-gray-50 rounded-lg">
-            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              🤖 AI 답변
-            </h4>
-            <div class="prose prose-sm max-w-none">
-              <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ searchResult }}</p>
-            </div>
-            
-            <!-- 추가 액션 -->
-            <div class="mt-4 pt-4 border-t border-gray-200">
-              <div class="flex gap-2">
-                <button 
-                  @click="saveReport"
-                  class="flex-1 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition"
-                >
-                  💾 저장
-                </button>
-                <button 
-                  @click="shareReport"
-                  class="flex-1 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition"
-                >
-                  🔗 공유
-                </button>
-                <button 
-                  @click="searchResult = ''; searchQuery = ''"
-                  class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
-                >
-                  🔄 새로
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 로딩 상태 -->
-          <div v-if="isSearching" class="mt-6 text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-            <p class="text-gray-600 text-sm">AI가 데이터를 분석하고 있습니다...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </Teleport>
   
   <!-- 로그인 안내 모달 - Teleport로 body에 렌더링 -->
   <Teleport to="body">
@@ -378,19 +270,7 @@ const userStore = useUserStore()
 const router = useRouter()
 
 // 모달 상태
-const showReportModal = ref(false)
 const showLoginModal = ref(false)
-const searchQuery = ref('')
-const searchResult = ref('')
-const isSearching = ref(false)
-
-// 빠른 질문 예시
-const quickQuestions = [
-  '이번 달 인기 카테고리는?',
-  '내 상품 성과 분석',
-  '경쟁자 가격 비교',
-  '트렌드 키워드 추천'
-]
 
 // 로그아웃 처리
 const handleLogout = async () => {
@@ -404,92 +284,20 @@ const handleLogout = async () => {
 }
 
 // 리포트 페이지로 이동
-const goToReports = (type = null) => {
+const goToReportPage = () => {
   // 로그인 확인
   if (!userStore.isAuthenticated) {
     showLoginModal.value = true
     return
   }
   
-  // TODO: 리포트 페이지가 만들어지면 실제 라우팅
-  if (type) {
-    // 특정 리포트 타입으로 이동
-    console.log(`${type} 리포트로 이동`)
-    // router.push(`/reports/${type}`)
-  } else {
-    // 전체 리포트 페이지로 이동
-    console.log('전체 리포트로 이동')
-    // router.push('/reports')
-  }
-  
-  // 임시로 알림 표시
-  alert(`${type ? type + ' ' : ''}리포트 기능이 준비 중입니다! 🚀`)
-}
-
-// 모달 닫기
-const closeReportModal = () => {
-  showReportModal.value = false
-  searchQuery.value = ''
-  searchResult.value = ''
-  isSearching.value = false
+  // 리포트 페이지로 이동
+  router.push('/report')
 }
 
 // 로그인 모달 닫기
 const closeLoginModal = () => {
   showLoginModal.value = false
-}
-
-// AI 검색 처리
-const handleReportSearch = async () => {
-  if (!searchQuery.value.trim()) return
-  
-  isSearching.value = true
-  searchResult.value = ''
-  
-  try {
-    // TODO: 실제 AI 에이전트 API 호출
-    await new Promise(resolve => setTimeout(resolve, 2000)) // 임시 로딩
-    
-    // 임시 결과
-    searchResult.value = `질문: "${searchQuery.value}"
-
-📊 분석 결과:
-• 현재 가장 인기 있는 카테고리는 '패션'입니다
-• 지난달 대비 25% 성장했습니다
-• 추천 키워드: '미니멀', '비건', '지속가능'
-
-💡 전략 제안:
-1. 여름 시즌에 맞는 가벼운 소재 활용
-2. 에코 프렌들리 소재 강조
-3. 가격대: 5-15만원이 가장 인기`
-    
-  } catch (error) {
-    searchResult.value = '죄송합니다. 검색 중 오류가 발생했습니다. 다시 시도해주세요.'
-  } finally {
-    isSearching.value = false
-  }
-}
-
-// 리포트 저장
-const saveReport = () => {
-  // TODO: 실제 저장 로직
-  alert('리포트가 저장되었습니다! 💾')
-}
-
-// 리포트 공유
-const shareReport = () => {
-  // TODO: 실제 공유 로직
-  if (navigator.share) {
-    navigator.share({
-      title: 'AI 리포트 결과',
-      text: searchResult.value,
-      url: window.location.href
-    })
-  } else {
-    // 폴백: 클립보드에 복사
-    navigator.clipboard.writeText(searchResult.value)
-    alert('리포트가 클립보드에 복사되었습니다! 📋')
-  }
 }
 
 // 추천 상품 페이지로 이동

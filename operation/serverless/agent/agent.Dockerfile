@@ -14,18 +14,17 @@ RUN pip install --no-cache-dir \
     transformers==4.51.3 \
     accelerate \
     tokenizers \
-    langchain==0.3.10 \
-    langchain-community==0.3.10 \
-    langchain-huggingface==0.1.2 \
-    langchain-core==0.3.21 \
-    langgraph==0.2.57 \
+    langchain \
+    langchain-community \
+    langchain-huggingface \
+    langchain-core \
+    langgraph \
     tavily-python \
     requests \
     httpx \
     numpy \
     pandas \
-    python-dotenv \
-    pydantic==2.10.3
+    pydantic
 
 # 프로젝트 파일 복사
 COPY . .
@@ -34,7 +33,7 @@ COPY . .
 ENV HF_HOME=/app/hf_cache
 ENV PYTHONPATH=/app
 ENV TOKENIZERS_PARALLELISM=false
-ENV TRANSFORMERS_CACHE=/app/hf_cache
+
 # 캐시 디렉토리 생성
 RUN mkdir -p /app/hf_cache
 

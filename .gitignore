@@ -14,6 +14,9 @@ operation/lambda/text/.requirements.zip
 
 operation/lambda/infrastructure/.serverless
 
+operation/lambda/agent/.serverless
+operation/lambda/agent/.requirements.zip
+
 
 
 operation/backend/cheorish-lab-08181390c2f3.json

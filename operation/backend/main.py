@@ -6,6 +6,7 @@ from router.auth import router as auth_router
 from router.members import router as member_router
 from router.generate import router as generated_router
 from router.product_search import router as product_search_router
+from router.report import router as report_router
 
 app = FastAPI(
     title="Shop Lingo API",
@@ -72,6 +73,7 @@ app.include_router(member_router)
 app.include_router(generated_router)
 app.include_router(auth_router)
 app.include_router(product_search_router)
+app.include_router(report_router)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

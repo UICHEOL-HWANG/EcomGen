@@ -5,6 +5,7 @@ import Login from '@/views/Login.vue'
 import Signup from '@/views/Signup.vue'
 import MyPage from '@/views/MyPage.vue'
 import Generate from '@/views/Generate.vue'
+import Report from '@/views/Report.vue'
 import RecommendedProducts from '@/views/RecommendedProducts.vue'
 import MyProducts from '@/views/MyProducts.vue'
 import MyReports from '@/views/MyReports.vue'
@@ -35,6 +36,12 @@ const routes = [
     path: '/generate',
     name: 'Generate',
     component: Generate,
+    meta: { requiresAuth: true } // 인증 필요
+  },
+  {
+    path: '/report',
+    name: 'Report',
+    component: Report,
     meta: { requiresAuth: true } // 인증 필요
   },
   {
