@@ -84,11 +84,11 @@ def receive_report_callback(
         # DB 저장
         report = Report(
             user_id=data.user_id,
-            run_id=data.job_id,
+            job_id=data.job_id,
             input_state={"query": data.query},
             output_state={
                 "result": data.result,
-                "web_results": data.web_results
+                "web_results": data.web_results,
             }
         )
         
@@ -117,7 +117,7 @@ def get_report_status(
     try:
         report = db.query(Report).filter(
             Report.user_id == current_user["id"],
-            Report.run_id == job_id
+            Report.job_id == job_id
         ).first()
         
         if report:
@@ -177,14 +177,28 @@ def save_report(
                 "message": "리포트가 업데이트되었습니다."
             }
         else:
-            # 새 리포트 생성
-            new_report = Report(
-                user_id=current_user["id"],
-                run_id=request.job_id or str(uuid.uuid4()),
-                title=request.title,
-                content=request.content,
-                job_id=request.job_id
-            )
+            callback_report = db.query(Report).filter(
+                Report.job_id == request.job_id
+            ).first()
+
+            if callback_report:
+                new_report = Report(
+                    user_id=current_user["id"],
+                    title=request.title,
+                    content=request.content,
+                    job_id=request.job_id,
+                    input_state=callback_report.input_state,
+                    output_state=callback_report.output_state
+                )
+            else:
+                new_report = Report(
+                    user_id=current_user["id"],
+                    title=request.title,
+                    content=request.content,
+                    job_id=request.job_id or str(uuid.uuid4()),
+                    input_state={},
+                    output_state={}
+                )
             
             db.add(new_report)
             db.commit()

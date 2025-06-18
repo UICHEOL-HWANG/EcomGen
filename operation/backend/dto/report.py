@@ -21,6 +21,7 @@ class ReportCallbackRequest(BaseModel):
     user_id: int
     query: str
     result: str
+    web_results: str
 
 
 class ReportCallbackResponse(BaseModel):

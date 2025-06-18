@@ -62,7 +62,6 @@ class Report(Base):
 
     report_id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
-    run_id = Column(String, nullable=False)  # UUID이지만 문자열로 처리
     
     # 추가: 리포트 저장을 위한 필드들
     title = Column(String(255), nullable=True)  # 리포트 제목
