@@ -47,10 +47,6 @@
               <div class="text-xs text-gray-600">총 상품</div>
             </div>
             <div class="text-center">
-              <div class="text-2xl font-bold text-green-600">{{ favoriteProducts.length }}</div>
-              <div class="text-xs text-gray-600">즐겨찾기</div>
-            </div>
-            <div class="text-center">
               <div class="text-2xl font-bold text-purple-600">{{ Math.max(0, categories.length - 1) }}</div>
               <div class="text-xs text-gray-600">카테고리</div>
             </div>
@@ -118,15 +114,7 @@
               
               <!-- 상품 정보 -->
               <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between mb-2">
-                  <h3 class="font-bold text-gray-900 line-clamp-1">{{ product.name }}</h3>
-                  <button 
-                    @click.stop="toggleFavorite(product)"
-                    class="text-lg flex-shrink-0 ml-2"
-                  >
-                    {{ product.isFavorite ? '❤️' : '🤍' }}
-                  </button>
-                </div>
+                <h3 class="font-bold text-gray-900 line-clamp-1 mb-2">{{ product.name }}</h3>
                 
                 <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ product.description }}</p>
                 
@@ -221,12 +209,6 @@
             class="absolute top-4 right-4 w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white hover:bg-opacity-70 transition"
           >
             ✕
-          </button>
-          <button 
-            @click="toggleFavorite(selectedProduct)"
-            class="absolute top-4 left-4 w-10 h-10 bg-black bg-opacity-50 rounded-full flex items-center justify-center hover:bg-opacity-70 transition"
-          >
-            {{ selectedProduct.isFavorite ? '❤️' : '🤍' }}
           </button>
         </div>
         
@@ -366,7 +348,7 @@ const loadMyProducts = async () => {
       category: product.category || '기타',
       createdAt: formatDate(product.created_at),
       imageUrl: product.image_url,
-      isFavorite: false, // TODO: 즐겨찾기 기능 추가 시 수정
+      isFavorite: false, // 즐겨찾기 기능 제거됨
       keywords: product.keywords || [],
       tone: product.tone,
       jobId: product.job_id
@@ -386,10 +368,6 @@ const loadMyProducts = async () => {
 
 // 계산된 속성들
 const categories = computed(() => availableCategories.value)
-
-const favoriteProducts = computed(() => {
-  return myProducts.value.filter(p => p.isFavorite)
-})
 
 // 이벤트 핸들러들
 const onCategoryChange = async (category) => {
@@ -411,8 +389,7 @@ const openProductDetail = (product) => {
 }
 
 const toggleFavorite = (product) => {
-  product.isFavorite = !product.isFavorite
-  // TODO: API 호출로 서버에 즐겨찾기 상태 저장
+  // 즐겨찾기 기능이 제거되었습니다
 }
 
 const editProduct = (product) => {

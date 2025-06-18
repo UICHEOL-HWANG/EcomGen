@@ -21,8 +21,8 @@ def lambda_handler(event, context):
             keywords = body.get("keywords", [])
             tone = body.get("tone")
             
-            # 🐛 디버깅: Lambda에서 받은 키워드 로그
-            logger.info(f"[DEBUG] Lambda에서 받은 키워드 - Job ID: {job_id}, Keywords: {keywords}")
+
+            logger.info(f"Lambda에서 받은 키워드 - Job ID: {job_id}, Keywords: {keywords}")
 
             if not all([job_id, user_id, product_name, category, price, tone]):
                 logger.error(f"필수 필드 누락 - Job ID: {job_id}")

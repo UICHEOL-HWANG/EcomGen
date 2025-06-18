@@ -6,6 +6,13 @@ services:
       dockerfile: proxy.Dockerfile 
     ports:
       - "80:80"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: "/ecomgen/nginx"
+        awslogs-region: "ap-northeast-2"
+        awslogs-stream: "proxy"
+        awslogs-create-group: "true"
     networks:
       - shoplingo 
 
