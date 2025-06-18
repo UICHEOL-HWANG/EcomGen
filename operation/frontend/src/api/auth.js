@@ -24,9 +24,9 @@ export const login = async (credentials) => {
     if (isMobile() && response.data.access_token && response.data.refresh_token) {
       sessionStorage.setItem('access_token', response.data.access_token)
       sessionStorage.setItem('refresh_token', response.data.refresh_token)
-      console.log('[LOGIN] Mobile: tokens saved to sessionStorage')
+      console.log('Mobile: tokens saved to sessionStorage')
     } else if (!isMobile()) {
-      console.log('[LOGIN] Desktop: using cookies only')
+      console.log('Desktop: using cookies only')
     }
     
     // CSRF 토큰은 모든 환경에서 sessionStorage 사용

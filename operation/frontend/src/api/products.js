@@ -5,7 +5,7 @@ import axiosInstance from './axios.js'
  * @param {Object} params - 쿼리 파라미터
  * @param {number} params.limit - 조회할 상품 수 (기본: 50)
  * @param {number} params.offset - 건너뛸 상품 수 (기본: 0)
- * @param {string} params.category - 필터링할 카테고리 (선택사항)
+ * @param {string} params.category - 필터링할 카테고리 (선택사항) 버튼으로 마무리
  * @param {string} params.sort_by - 정렬 기준 (latest, oldest, name, price_low, price_high)
  * @returns {Promise} 상품 목록과 메타데이터
  */

@@ -592,10 +592,9 @@ onMounted(async () => {
   // 통계 데이터 로드
   await loadStats()
   
-  // 차트 강제 다시 그리기 (디버그용)
+  // 차트 다시 그리기
   setTimeout(() => {
     if (stats.value?.category_breakdown && Object.keys(stats.value.category_breakdown).length > 0) {
-      console.log('차트 강제 다시 그리기 시도')
       drawChart()
     }
   }, 500)
@@ -672,10 +671,6 @@ const getCategoryColor = (category) => {
 // 간단한 도넛 차트 그리기 (부드러운 애니메이션 적용)
 const drawChart = () => {
   if (!categoryChart.value || !stats.value?.category_breakdown) {
-    console.log('차트 그리기 조건 불충족:', {
-      canvas: !!categoryChart.value,
-      data: !!stats.value?.category_breakdown
-    })
     return
   }
   
@@ -822,7 +817,7 @@ const generateSliceInfo = () => {
     currentAngle += adjustedSliceAngle
   })
   
-  console.log('차트 애니메이션 완료 및 슬라이스 정보 생성 완료')
+
 }
 
 // 차트 마우스 이벤트 처리
@@ -847,8 +842,6 @@ const handleChartMouseMove = (event) => {
   let angle = Math.atan2(dy, dx)
   if (angle < 0) angle += 2 * Math.PI
   
-  console.log(`마우스: (${x.toFixed(1)}, ${y.toFixed(1)}), 거리: ${distance.toFixed(1)}, 각도: ${(angle * 180 / Math.PI).toFixed(1)}도`)
-  
   // 호버된 슬라이스 찾기
   const hoveredSlice = chartSlices.value.find(slice => {
     const isInRange = distance >= slice.innerRadius && distance <= slice.outerRadius
@@ -863,9 +856,7 @@ const handleChartMouseMove = (event) => {
       isInAngle = angle >= slice.startAngle || angle <= slice.endAngle
     }
     
-    if (isInRange && isInAngle) {
-      console.log(`호버 감지! 카테고리: ${slice.category}, 시작: ${(slice.startAngle * 180 / Math.PI).toFixed(1)}도, 끝: ${(slice.endAngle * 180 / Math.PI).toFixed(1)}도`)
-    }
+
     
     return isInRange && isInAngle
   })

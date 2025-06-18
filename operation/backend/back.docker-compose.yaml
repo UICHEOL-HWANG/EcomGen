@@ -6,6 +6,13 @@ services:
       - "8000:8000"
     env_file:
       - ./.env
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: "/ecomgen/backend"
+        awslogs-region: "ap-northeast-2"
+        awslogs-stream: "web"
+        awslogs-create-group: "true"
     networks:
       - shoplingo
 

@@ -301,7 +301,6 @@ const categories = ref([{ id: 'all', name: '전체' }])
 // 정렬 옵션
 const sortOptions = ref([
   { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기순' },
   { value: 'price_low', label: '가격 낮은순' },
   { value: 'price_high', label: '가격 높은순' }
 ])
@@ -419,9 +418,6 @@ const filteredProducts = computed(() => {
   // 정렬 (로컬 정렬)
   if (selectedSort.value === 'latest') {
     // 최신순 (이미 기본 정렬)
-  } else if (selectedSort.value === 'popular') {
-    // 인기순 (임시로 이름 순으로)
-    filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name))
   } else if (selectedSort.value === 'price_low') {
     // 가격 낮은순
     filtered = [...filtered].sort((a, b) => {
