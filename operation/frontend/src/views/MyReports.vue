@@ -178,7 +178,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getReports, deleteReport as deleteReportAPI } from '@/api/reports.js'
+import { getReports, deleteReport as deleteReportAPI, getReport } from '@/api/reports.js'
 
 const router = useRouter()
 
@@ -220,10 +220,14 @@ const loadReports = async () => {
   }
 }
 
-const openReport = (report) => {
-  console.log('선택된 리포트:', report)
-  console.log('리포트 content:', report.content)
-  selectedReport.value = report
+const openReport = async (report) => {
+  try {
+    const res = await getReport(report.report_id)
+    selectedReport.value = res.report
+  } catch (e) {
+    console.error('리포트 조회 실패:', e)
+    alert('리포트를 불러오지 못했습니다.')
+  }
 }
 
 // input_state에서 사용자 질문 추출
