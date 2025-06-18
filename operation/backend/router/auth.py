@@ -63,12 +63,24 @@ def login(user_data: UserLogin, request: Request, response: Response, db: Sessio
     # 하이브리드 쿠키 설정 (데스크톱만)
     set_token_cookies(response, request, access_token, refresh_token)
     
-    return {
-        "message": "Login successful",
-        "csrf_token": csrf_token,
-        "access_token": access_token,  # 모든 환경에 API로 제공
-        "refresh_token": refresh_token  # 모든 환경에 API로 제공
-    }
+    # 모바일/데스크톱 구분 응답
+    user_agent = request.headers.get("User-Agent", "")
+    is_mobile = "mobile" in user_agent.lower() or "android" in user_agent.lower() or "iphone" in user_agent.lower()
+    
+    if is_mobile:
+        # 모바일: JSON에 토큰 포함
+        return {
+            "message": "Login successful",
+            "csrf_token": csrf_token,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }
+    else:
+        # 데스크톱: 쿠키만 사용, JSON에서 토큰 제거
+        return {
+            "message": "Login successful",
+            "csrf_token": csrf_token
+        }
 
 @router.post("/logout")
 def logout(request: Request, response: Response):

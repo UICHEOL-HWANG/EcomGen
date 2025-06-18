@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
     <!-- 모바일 중심 컨테이너 -->
-    <div class="max-w-sm mx-auto bg-white min-h-screen flex flex-col">
+    <div class="max-w-sm mx-auto bg-gray-50 min-h-screen flex flex-col">
       <Header />
       <main class="flex-1 pb-20">
         <router-view />

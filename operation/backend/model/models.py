@@ -63,8 +63,14 @@ class Report(Base):
     report_id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
     run_id = Column(String, nullable=False)  # UUID이지만 문자열로 처리
+    
+    # 추가: 리포트 저장을 위한 필드들
+    title = Column(String(255), nullable=True)  # 리포트 제목
+    content = Column(Text, nullable=True)  # 정제된 리포트 내용 (마크다운 처리 완료)
+    job_id = Column(String(255), nullable=True)  # AI 생성 작업 ID
+    
     input_state = Column(JSON)
     output_state = Column(JSON)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
+    
     user = relationship("Member", back_populates="reports")

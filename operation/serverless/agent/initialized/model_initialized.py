@@ -9,7 +9,7 @@ class ModelInitialized:
     def __init__(
         self, 
         model_name: str = "LGAI-EXAONE/EXAONE-3.5-2.4B-Instruct", 
-        max_new_tokens: int = 512, 
+        max_new_tokens: int = 1024, 
         temperature: float = 0.7,
         repetition_penalty: float = 1.1
     ):
@@ -38,7 +38,7 @@ class ModelInitialized:
             # 토크나이저 로드
             tokenizer = AutoTokenizer.from_pretrained(self.model_name)
             
-            # 파이프라인 생성
+            # 파이프라인 생성 (eos_token_id를 stop으로 활용)
             pipe = pipeline(
                 "text-generation",
                 model=model,
@@ -63,7 +63,6 @@ class ModelInitialized:
     
     def __call__(self):
         """
-        함수처럼 부를라고 넣음
-        :return:
+        모델 인스턴스를 반환합니다.
         """
         return self.llm

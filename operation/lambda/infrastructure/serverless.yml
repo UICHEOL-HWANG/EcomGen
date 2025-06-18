@@ -9,7 +9,7 @@ provider:
 
 resources:
   Resources:
-    # 텍스트 생성용 SQS 큐
+    # 텍스트 생성용 SQS 큐 (메시지 보관 14일, 가시성 타임아웃 15분, 롱 폴링 20초, 3회 실패 시 DLQ로 이동)
     TextGenerationQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -21,14 +21,14 @@ resources:
           deadLetterTargetArn: !GetAtt TextGenerationDLQ.Arn
           maxReceiveCount: 3
 
-    # 텍스트 생성 실패시 DLQ
+    # 텍스트 생성 실패 시 이동하는 DLQ (메시지 보관 14일)
     TextGenerationDLQ:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:provider.stage}-text-generation-dlq
         MessageRetentionPeriod: 1209600
 
-    # 이미지 생성용 SQS 큐
+    # 이미지 생성용 SQS 큐 (메시지 보관 14일, 가시성 타임아웃 15분, 롱 폴링 20초, 3회 실패 시 DLQ로 이동)
     ImageGenerationQueue:
       Type: AWS::SQS::Queue
       Properties:
@@ -40,12 +40,31 @@ resources:
           deadLetterTargetArn: !GetAtt ImageGenerationDLQ.Arn
           maxReceiveCount: 3
 
-    # 이미지 생성 실패시 DLQ
+    # 이미지 생성 실패 시 이동하는 DLQ (메시지 보관 14일)
     ImageGenerationDLQ:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:provider.stage}-image-generation-dlq
         MessageRetentionPeriod: 1209600
+    
+    # 리포트 생성용 SQS 큐 (메시지 보관 14일, 가시성 타임아웃 15분, 롱 폴링 20초, 3회 실패 시 DLQ로 이동)
+    ReportGenerationQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-report-generation-queue
+        MessageRetentionPeriod: 1209600       # 메시지 보관 기간: 14일
+        VisibilityTimeout: 900                # 가시성 타임아웃: 15분 (Lambda 실행 시간과 일치)
+        ReceiveMessageWaitTimeSeconds: 20     # 롱 폴링 대기 시간: 20초
+        RedrivePolicy:                        # DLQ로 리디렉션되는 조건
+          deadLetterTargetArn: !GetAtt ReportGenerationDLQ.Arn
+          maxReceiveCount: 3                  # 3회 실패 시 DLQ로 이동
+
+    # 리포트 생성 실패 시 이동하는 DLQ (메시지 보관 14일)
+    ReportGenerationDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:provider.stage}-report-generation-dlq
+        MessageRetentionPeriod: 1209600    
 
   Outputs:
     TextGenerationQueueUrl:
@@ -72,10 +91,38 @@ resources:
       Export:
         Name: ${self:provider.stage}-ImageGenerationQueueArn
 
+    ReportGenerationQueueUrl:
+      Description: "리포트 생성 SQS 큐 URL"
+      Value: !Ref ReportGenerationQueue
+      Export:
+        Name: ${self:provider.stage}-ReportGenerationQueueUrl
+
+    ReportGenerationQueueArn:
+      Description: "리포트 생성 SQS 큐 ARN"
+      Value: !GetAtt ReportGenerationQueue.Arn
+      Export:
+        Name: ${self:provider.stage}-ReportGenerationQueueArn
+
     TextDLQUrl:
       Description: "텍스트 생성 DLQ URL"
       Value: !Ref TextGenerationDLQ
 
+    TextDLQArn:
+      Description: "텍스트 생성 DLQ ARN"
+      Value: !GetAtt TextGenerationDLQ.Arn
+
     ImageDLQUrl:
       Description: "이미지 생성 DLQ URL"
       Value: !Ref ImageGenerationDLQ
+
+    ImageDLQArn:
+      Description: "이미지 생성 DLQ ARN"
+      Value: !GetAtt ImageGenerationDLQ.Arn
+
+    ReportDLQUrl:
+      Description: "리포트 생성 DLQ URL"
+      Value: !Ref ReportGenerationDLQ
+
+    ReportDLQArn:
+      Description: "리포트 생성 DLQ ARN"
+      Value: !GetAtt ReportGenerationDLQ.Arn
