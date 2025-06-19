@@ -5,6 +5,8 @@ import hashlib
 import hmac
 import base64
 import pandas as pd
+from datetime import datetime
+import pytz
 
 
 class Signature:
@@ -17,6 +19,7 @@ class Signature:
 
 
 def get_header(method, uri, api_key, secret_key, customer_id):
+    
     timestamp = str(round(time.time() * 1000))
     signature = Signature.generate(timestamp, method, uri, secret_key)
 
@@ -30,11 +33,14 @@ def get_header(method, uri, api_key, secret_key, customer_id):
 
 
 def getresults(hintKeywords):
-
+    print(f"Keyword service called with: {hintKeywords}")
+    
     BASE_URL = os.getenv("BASE_URL")
     API_KEY = os.getenv("API_KEY")
     SECRET_KEY = os.getenv("SECRET_KEY")
     CUSTOMER_ID = os.getenv("CUSTOMER_ID")
+    
+    print(f"Environment variables - BASE_URL: {BASE_URL}, API_KEY: {API_KEY[:10] if API_KEY else None}...")
 
     uri = '/keywordstool'
     method = 'GET'
@@ -43,9 +49,14 @@ def getresults(hintKeywords):
         'hintKeywords': hintKeywords,
         'showDetail': '1'
     }
+    
+    headers = get_header(method, uri, API_KEY, SECRET_KEY, CUSTOMER_ID)
+    print(f"Request headers: {headers}")
 
-    response = requests.get(BASE_URL + uri, params=params,
-                            headers=get_header(method, uri, API_KEY, SECRET_KEY, CUSTOMER_ID))
+    response = requests.get(BASE_URL + uri, params=params, headers=headers)
+    
+    print(f"API response status: {response.status_code}")
+    print(f"API response: {response.text[:200]}...")
 
     response.raise_for_status()  # error 발생 시 예외 처리
 
@@ -59,5 +70,7 @@ def getresults(hintKeywords):
     data = data.sort_values("monthlyPcQcCnt", ascending=False).reset_index(drop=True).iloc[:10][
         ["relKeyword", "monthlyPcQcCnt"]
     ]
-
-    return data.to_dict(orient="records")
+    
+    result = data.to_dict(orient="records")
+    print(f"Final result: {result}")
+    return result

@@ -6,6 +6,11 @@ services:
       - "8000:8000"
     env_file:
       - ./.env
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     logging:
       driver: awslogs
       options:

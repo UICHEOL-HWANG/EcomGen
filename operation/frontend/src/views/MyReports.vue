@@ -112,7 +112,7 @@
     </section>
 
     <!-- 리포트 상세 모달 -->
-    <div v-if="selectedReport" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="selectedReport" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
       <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <!-- 헤더 -->
         <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
@@ -127,7 +127,7 @@
               </div>
             </div>
             <button 
-              @click="selectedReport = null"
+              @click="closeModal"
               class="text-gray-400 hover:text-gray-600 flex-shrink-0"
             >
               ✕
@@ -224,10 +224,18 @@ const openReport = async (report) => {
   try {
     const res = await getReport(report.report_id)
     selectedReport.value = res.report
+    // 모달 열릴 때 body 스크롤 블록
+    document.body.style.overflow = 'hidden'
   } catch (e) {
     console.error('리포트 조회 실패:', e)
     alert('리포트를 불러오지 못했습니다.')
   }
+}
+
+const closeModal = () => {
+  selectedReport.value = null
+  // 모달 닫을 때 body 스크롤 복원
+  document.body.style.overflow = 'auto'
 }
 
 // input_state에서 사용자 질문 추출
@@ -289,7 +297,7 @@ const deleteReport = async (report) => {
     
     // 모달이 열려있으면 닫기
     if (selectedReport.value && selectedReport.value.report_id === report.report_id) {
-      selectedReport.value = null
+      closeModal()
     }
     
     alert('리포트가 삭제되었습니다.')
@@ -320,13 +328,17 @@ const formatContent = (content) => {
   if (!content) return ''
   
   return content
-    // 제목 처리
+    // 제목 처리 (4레벨부터 1레벨까지)
+    .replace(/^#### (.*$)/gm, '<h4 class="text-base font-bold text-gray-900 mt-3 mb-2">$1</h4>')
     .replace(/^### (.*$)/gm, '<h3 class="text-lg font-bold text-gray-900 mt-4 mb-2">$1</h3>')
     .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold text-gray-900 mt-5 mb-3">$1</h2>')
     .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-6 mb-4">$1</h1>')
     
     // 볼드 처리
     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+    
+    // 리스트 처리 (간단한 - 로 시작하는 것들)
+    .replace(/^- (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
     
     // 줄바꿈 처리
     .replace(/\n\n/g, '</p><p class="mb-4">')
@@ -335,6 +347,12 @@ const formatContent = (content) => {
     
     // 빈 p 태그 제거
     .replace(/<p class="mb-4">\s*<\/p>/g, '')
+    
+    // li 태그들을 ul로 감싸기
+    .replace(/(<li class="ml-4 mb-1">.*?<\/li>)/gs, (match) => {
+      const listItems = match.match(/<li class="ml-4 mb-1">.*?<\/li>/g)
+      return `<ul class="list-none mb-4">${listItems.join('')}</ul>`
+    })
 }
 
 // 컴포넌트 마운트
