@@ -37,7 +37,16 @@
         <form @submit.prevent="handleGenerateProduct" class="space-y-6">
           <!-- 상품명 -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <label class="block text-lg font-semibold text-gray-900 mb-3">상품명 *</label>
+            <div class="flex items-center justify-between mb-3">
+              <label class="block text-lg font-semibold text-gray-900">상품명 *</label>
+              <button 
+                @click="openKeywordModal" 
+                type="button"
+                class="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full hover:bg-purple-200 transition"
+              >
+                🔍 키워드 추천
+              </button>
+            </div>
             <input
               v-model="productForm.product_name"
               type="text"
@@ -202,6 +211,84 @@
           <p class="text-gray-600 text-sm">상품을 생성하고 있습니다...</p>
         </div>
       </div>
+
+      <!-- 키워드 추천 모달 -->
+      <div v-if="showKeywordModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <!-- 모달 헤더 -->
+          <div class="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-gray-900">🔍 키워드 추천</h3>
+              <button 
+                @click="closeKeywordModal"
+                class="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <p class="text-sm text-gray-600 mt-2">키워드를 입력하면 관련 추천 키워드를 제공합니다</p>
+          </div>
+          
+          <!-- 모달 내용 -->
+          <div class="p-6">
+            <!-- 키워드 입력 -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">키워드 입력</label>
+              <div class="flex gap-2">
+                <input
+                  v-model="keywordQuery"
+                  @keydown.enter.prevent="searchKeywords"
+                  type="text"
+                  placeholder="예: 신발, 스니커즈, 운동화"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                />
+                <button 
+                  @click="searchKeywords"
+                  :disabled="keywordLoading || !keywordQuery.trim()"
+                  class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+                >
+                  검색
+                </button>
+              </div>
+            </div>
+
+            <!-- 로딩 상태 -->
+            <div v-if="keywordLoading" class="text-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-3"></div>
+              <p class="text-gray-600 text-sm">키워드를 분석하고 있습니다...</p>
+            </div>
+
+            <!-- 추천 키워드 목록 -->
+            <div v-else-if="recommendedKeywords.length > 0" class="space-y-3">
+              <h4 class="font-medium text-gray-900 mb-3">📊 추천 키워드 (월간 검색량)</h4>
+              <div class="space-y-2 max-h-64 overflow-y-auto">
+                <div 
+                  v-for="keyword in recommendedKeywords" 
+                  :key="keyword.relKeyword"
+                  @click="selectKeyword(keyword.relKeyword)"
+                  class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-300 cursor-pointer transition"
+                >
+                  <span class="font-medium text-gray-900">{{ keyword.relKeyword }}</span>
+                  <span class="text-sm text-gray-500">{{ formatSearchVolume(keyword.monthlyPcQcCnt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div v-else-if="keywordSearched && recommendedKeywords.length === 0" class="text-center py-8">
+              <div class="text-4xl mb-3">🔍</div>
+              <p class="text-gray-600">추천할 키워드가 없습니다.</p>
+              <p class="text-gray-500 text-sm">다른 키워드로 검색해보세요.</p>
+            </div>
+
+            <!-- 초기 상태 -->
+            <div v-else class="text-center py-8">
+              <div class="text-4xl mb-3">💡</div>
+              <p class="text-gray-600">키워드를 입력하고 검색 버튼을 눌러보세요!</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -210,6 +297,7 @@
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateProductAndWait } from '@/api/generate.js'
+import { getKeywordRecommendations } from '@/api/keyword.js'
 import CategorySelector from '@/components/CategorySelector.vue'
 import ToneSelector from '@/components/ToneSelector.vue'
 
@@ -229,6 +317,13 @@ const productForm = reactive({
 
 // 키워드 입력
 const keywordInput = ref('')
+
+// 키워드 추천 관련 상태
+const showKeywordModal = ref(false)
+const keywordQuery = ref('')
+const keywordLoading = ref(false)
+const keywordSearched = ref(false)
+const recommendedKeywords = ref([])
 
 // 상태 관리
 const loading = ref(false)
@@ -287,6 +382,59 @@ const addKeyword = () => {
 // 키워드 제거
 const removeKeyword = (index) => {
   productForm.keywords.splice(index, 1)
+}
+
+// 키워드 추천 모달 열기
+const openKeywordModal = () => {
+  showKeywordModal.value = true
+  keywordQuery.value = ''
+  recommendedKeywords.value = []
+  keywordSearched.value = false
+  document.body.style.overflow = 'hidden'
+}
+
+// 키워드 추천 모달 닫기
+const closeKeywordModal = () => {
+  showKeywordModal.value = false
+  document.body.style.overflow = 'auto'
+}
+
+// 키워드 검색
+const searchKeywords = async () => {
+  if (!keywordQuery.value.trim()) return
+  
+  keywordLoading.value = true
+  keywordSearched.value = false
+  
+  try {
+    const keywords = await getKeywordRecommendations(keywordQuery.value.trim())
+    recommendedKeywords.value = keywords || []
+    keywordSearched.value = true
+  } catch (error) {
+    console.error('키워드 검색 실패:', error)
+    recommendedKeywords.value = []
+    keywordSearched.value = true
+    alert('키워드 검색에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    keywordLoading.value = false
+  }
+}
+
+// 키워드 선택
+const selectKeyword = (keyword) => {
+  productForm.product_name = keyword
+  closeKeywordModal()
+}
+
+// 검색량 포맷팅
+const formatSearchVolume = (volume) => {
+  if (volume >= 1000000) {
+    return `${Math.floor(volume / 100000) / 10}M`
+  } else if (volume >= 1000) {
+    return `${Math.floor(volume / 100) / 10}K`
+  } else {
+    return volume.toString()
+  }
 }
 
 const handleGenerateProduct = async () => {
