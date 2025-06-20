@@ -46,7 +46,13 @@ def lambda_handler(event, context):
             logger.info(f"번역 완료 - Job ID: {job_id}, 원문: {product_name}, 번역: {translated_name}")
 
             # RunPod API 호출
-            payload = {"input": {"prompt": prompt}}
+            payload = {
+                "input": {
+                    "prompt": prompt,
+                    "user_id": user_id,
+                    "korean_text": product_name
+                }
+            }
             url = f"https://api.runpod.ai/v2/{api_id}/run"
             
             logger.info(f"RunPod API 호출 시작 - Job ID: {job_id}")
