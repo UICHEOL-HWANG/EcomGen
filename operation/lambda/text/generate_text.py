@@ -56,7 +56,15 @@ def lambda_handler(event, context):
                 'Authorization': f'Bearer {api_key}'
             }
 
-            payload = {"input": {"text": prompt}}
+            payload = {
+                "input": {
+                    "prompt": prompt,
+                    "user_id": user_id,
+                    "generation_params": {
+                        "temperature": 0.8
+                    }
+                }
+            }
             url = f"https://api.runpod.ai/v2/{api_id}/run"
             
             logger.info(f"RunPod API 호출 시작 - Job ID: {job_id}")

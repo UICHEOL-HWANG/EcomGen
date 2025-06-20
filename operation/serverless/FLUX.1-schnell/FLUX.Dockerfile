@@ -14,7 +14,9 @@ RUN pip install --no-cache-dir \
     runpod \
     huggingface-hub \
     sentencepiece \
-    protobuf
+    protobuf \
+    wandb \
+    pillow
 
 COPY . . /app/
 

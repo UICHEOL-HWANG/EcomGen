@@ -10,7 +10,8 @@ RUN pip install --no-cache-dir \
     transformers==4.51.3 \
     accelerate \
     requests \
-    runpod
+    runpod \
+    wandb
 
 COPY . . /app/
 
