@@ -100,28 +100,7 @@
       </div>
     </section>
 
-    <!-- 구분선 -->
-    <div class="relative mb-6">
-      <div class="absolute inset-0 flex items-center">
-        <div class="w-full border-t border-gray-300"></div>
-      </div>
-      <div class="relative flex justify-center text-sm">
-        <span class="px-2 bg-white text-gray-500">또는</span>
-      </div>
-    </div>
 
-    <!-- 소셜 회원가입 -->
-    <section class="space-y-3 mb-6">
-      <button class="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        <span class="text-lg">🟡</span>
-        <span class="font-medium text-gray-700">카카오로 시작하기</span>
-      </button>
-      
-      <button class="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-        <span class="text-lg">🔵</span>
-        <span class="font-medium text-gray-700">구글로 시작하기</span>
-      </button>
-    </section>
 
     <!-- 로그인 링크 -->
     <section class="text-center">

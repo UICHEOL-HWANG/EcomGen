@@ -1,0 +1,103 @@
+service: keyword-search
+
+provider:
+  name: aws 
+  runtime: python3.11
+  profile: cheorish-admin
+  stage: v1
+  region: ap-northeast-2
+  timeout: 90
+  memorySize: 512
+  
+  environment:
+    BASE_URL: ${env:BASE_URL}
+    API_KEY: ${env:API_KEY}
+    SECRET_KEY: ${env:SECRET_KEY}
+    CUSTOMER_ID: ${env:CUSTOMER_ID}
+  
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: 
+        - "arn:aws:logs:${self:provider.region}:*:log-group:/aws/lambda/*"
+
+functions:
+  keywordResearch:
+    handler: keywords.lambda_handler
+    name: ${self:service}-${self:provider.stage}-keyword-research
+    description: "네이버 키워드 API Lambda 함수"
+    
+    layers:
+      - arn:aws:lambda:ap-northeast-2:336392948345:layer:AWSSDKPandas-Python311:9
+    
+    events:
+      - http:
+          path: /keyword-research
+          method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    layer: false
+    dockerizePip: false
+    zip: true
+    noDeps:
+      - pandas
+      - numpy
+
+
+  
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!.git/**'
+    - '!.serverless/**'
+    - '!.pytest_cache/**'
+    - '!__pycache__/**'
+    - '!*.pyc'
+    - '!tests/**'
+    - '!README.md'
+    - '!.env'
+
+resources:
+  Resources:
+    # API Gateway 설정
+    KeywordResearchLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}-keyword-research
+        RetentionInDays: 14
+
+  Outputs:
+    KeywordResearchApiUrl:
+      Description: "Keyword Research API URL"
+      Value:
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: ApiGatewayRestApi
+            - ".execute-api."
+            - ${self:provider.region}
+            - ".amazonaws.com/"
+            - ${self:provider.stage}
+            - "/keyword-research"
+    
+    KeywordResearchLambdaArn:
+      Description: "Keyword Research Lambda Function ARN"
+      Value:
+        Ref: KeywordResearchLambdaFunction

@@ -123,7 +123,7 @@ class ProductSearchService:
         
         Args:
             db: 데이터베이스 세션
-            user_id: 사용자 ID
+            user_id: 사용자 ID (int)
             
         Returns:
             카테고리 목록
@@ -153,7 +153,7 @@ class ProductSearchService:
         
         Args:
             db: 데이터베이스 세션
-            user_id: 사용자 ID
+            user_id: 사용자 ID (int)
             product_id: 상품 ID
             
         Returns:
@@ -253,7 +253,7 @@ class ProductSearchService:
         
         Args:
             db: 데이터베이스 세션
-            user_id: 사용자 ID
+            user_id: 사용자 ID (int)
             
         Returns:
             통계 정보 딕셔너리

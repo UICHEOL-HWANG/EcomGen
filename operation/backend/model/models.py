@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, DateTime, ForeignKey, Text, JSON, Integer
+from sqlalchemy import Column, BigInteger, String, DateTime, ForeignKey, Text, JSON, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from .database import Base
 from sqlalchemy.sql import func
@@ -10,11 +10,13 @@ class Member(Base):
 
     id = Column(BigInteger, primary_key=True, index=True)
     email = Column(String(255), nullable=False, unique=True)
-    password = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=True)  # 소셜 로그인 시 NULL 허용
     username = Column(String(255), nullable=False, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    profile_pic = Column(String(500), nullable=True)  # 프로필 사진 URL (선택 사항)
+    profile_pic = Column(String(500), nullable=True)  # 프로필 사진 URL
+    
 
+    # 관계 정의
     product_descriptions = relationship("ProductDescription", back_populates="user")
     reports = relationship("Report", back_populates="user")
     generated_images = relationship("GeneratedImage", back_populates="user", cascade="all, delete-orphan")
@@ -23,7 +25,7 @@ class ProductDescription(Base):
     __tablename__ = "product_descriptions"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    job_id = Column(String(36), index=True, nullable=True)  # 추가: UUID 작업 ID
+    job_id = Column(String(36), index=True, nullable=True)  # UUID 작업 ID
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
     product_name = Column(String(255), nullable=False)
     input_prompt = Column(Text, nullable=False)
@@ -34,13 +36,14 @@ class ProductDescription(Base):
     keywords = Column(Text, nullable=True)  # Store JSON-encoded keyword list
     tone = Column(String(100), nullable=True)
 
+    # 관계
     user = relationship("Member", back_populates="product_descriptions")
 
 class GeneratedImage(Base):
     __tablename__ = "generated_images"
 
     id = Column(BigInteger, primary_key=True, index=True)
-    job_id = Column(String(36), index=True, nullable=True)  # 추가: UUID 작업 ID
+    job_id = Column(String(36), index=True, nullable=True)  # UUID 작업 ID
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # 제품 정보
@@ -54,7 +57,7 @@ class GeneratedImage(Base):
     # 생성 시간
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    # 관계 설정
+    # 관계
     user = relationship("Member", back_populates="generated_images")
 
 class Report(Base):
@@ -63,7 +66,7 @@ class Report(Base):
     report_id = Column(BigInteger, primary_key=True, index=True)
     user_id = Column(BigInteger, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
     
-    # 추가: 리포트 저장을 위한 필드들
+    # 리포트 저장을 위한 필드들
     title = Column(String(255), nullable=True)  # 리포트 제목
     content = Column(Text, nullable=True)  # 정제된 리포트 내용 (마크다운 처리 완료)
     job_id = Column(String(255), nullable=True)  # AI 생성 작업 ID
@@ -72,4 +75,5 @@ class Report(Base):
     output_state = Column(JSON)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
+    # 관계
     user = relationship("Member", back_populates="reports")
