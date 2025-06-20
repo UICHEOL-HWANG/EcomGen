@@ -2,6 +2,7 @@ import logging
 import traceback
 from config.generated_text import generate_description
 import runpod
+import wandb
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -42,6 +43,7 @@ def handler(event):
         # 텍스트와 생성 파라미터 가져오기
         refine_text = input_data["text"]
         generation_params = input_data.get("generation_params", {})
+        wandb_config = input_data
 
         logging.info(f"텍스트 재생성 중 (길이: {len(refine_text)})")
 

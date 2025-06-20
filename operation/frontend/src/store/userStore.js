@@ -6,51 +6,14 @@ const isMobile = () => {
   return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 }
 
-// 하이브리드 저장 전략
+// 토큰 관리를 위한 간단한 저장소
 const tokenStorage = {
-  // 토큰 저장
-  setTokens(accessToken, refreshToken, csrfToken) {
-    if (isMobile()) {
-      // 모바일: sessionStorage 사용
-      sessionStorage.setItem('access_token', accessToken)
-      sessionStorage.setItem('refresh_token', refreshToken)
-      sessionStorage.setItem('csrf_token', csrfToken)
-      console.log('[STORAGE] Mobile: tokens saved to sessionStorage')
-    } else {
-      // 데스크톱: 쿠키만 사용 (sessionStorage 사용 안 함)
-      sessionStorage.setItem('csrf_token', csrfToken)  // CSRF만 sessionStorage
-      console.log('[STORAGE] Desktop: using cookies only (csrf_token in sessionStorage)')
-    }
-  },
-  
-  // 토큰 가져오기
-  getTokens() {
-    if (isMobile()) {
-      return {
-        accessToken: sessionStorage.getItem('access_token'),
-        refreshToken: sessionStorage.getItem('refresh_token'),
-        csrfToken: sessionStorage.getItem('csrf_token')
-      }
-    } else {
-      return {
-        accessToken: null,  // 데스크톱은 쿠키에서 가져옴
-        refreshToken: null, // 데스크톱은 쿠키에서 가져옴
-        csrfToken: sessionStorage.getItem('csrf_token')
-      }
-    }
-  },
-  
   // 토큰 삭제
   clearTokens() {
     sessionStorage.removeItem('access_token')
     sessionStorage.removeItem('refresh_token')
     sessionStorage.removeItem('csrf_token')
     console.log('[STORAGE] All tokens cleared from sessionStorage')
-  },
-  
-  // CSRF 토큰만 확인 (로그인 상태 확인용)
-  hasAuth() {
-    return !!sessionStorage.getItem('csrf_token')
   }
 }
 
@@ -123,6 +86,7 @@ export const useUserStore = defineStore('user', {
         this.isLoggedIn = false
         this.user = null
         this.loading = false
+        tokenStorage.clearTokens()
       }
     },
     
@@ -146,30 +110,17 @@ export const useUserStore = defineStore('user', {
       }
     },
     
+
+    
     // 인증 상태 확인
     async checkAuthStatus() {
-      // CSRF 토큰이 없으면 로그인되지 않은 상태로 간주
-      const csrfToken = sessionStorage.getItem('csrf_token')
-      if (!csrfToken) {
-        this.isLoggedIn = false
-        this.user = null
-        return
-      }
-      
       try {
         await this.fetchUserInfo()
       } catch (error) {
         // 인증이 없거나 만료된 경우
         this.isLoggedIn = false
         this.user = null
-        
-        // 모바일만 sessionStorage 삭제
-        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-        if (isMobile) {
-          sessionStorage.removeItem('access_token')
-          sessionStorage.removeItem('refresh_token')
-        }
-        sessionStorage.removeItem('csrf_token')
+        tokenStorage.clearTokens()
       }
     },
     

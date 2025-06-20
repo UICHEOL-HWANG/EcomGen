@@ -1,5 +1,4 @@
 from pydantic import BaseModel, validator
-from typing import Optional
 
 # Request DTO
 class KeywordRequest(BaseModel):
@@ -12,7 +11,7 @@ class KeywordRequest(BaseModel):
         return v.strip()
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "hintKeywords": "신발"
             }
@@ -24,7 +23,7 @@ class KeywordResponse(BaseModel):
     monthlyPcQcCnt: int
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "relKeyword": "나이키 신발",
                 "monthlyPcQcCnt": 125000

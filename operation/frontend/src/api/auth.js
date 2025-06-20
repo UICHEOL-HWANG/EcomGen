@@ -29,9 +29,10 @@ export const login = async (credentials) => {
       console.log('Desktop: using cookies only')
     }
     
-    // CSRF 토큰은 모든 환경에서 sessionStorage 사용
+    // CSRF 토큰은 모든 환경에서 sessionStorage 사용 (소셜 로그인과 동일)
     if (response.data.csrf_token) {
       sessionStorage.setItem('csrf_token', response.data.csrf_token)
+      console.log('[LOGIN] CSRF token saved to sessionStorage')
     }
     
     return response.data

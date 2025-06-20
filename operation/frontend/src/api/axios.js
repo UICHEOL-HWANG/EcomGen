@@ -28,19 +28,22 @@ axiosInstance.interceptors.request.use(
       config.headers['X-CSRF-Token'] = csrfToken
     }
     
-    // 모바일만 Authorization 헤더 사용
-    if (isMobile()) {
-      const accessToken = sessionStorage.getItem('access_token')
-      if (accessToken) {
-        config.headers['Authorization'] = `Bearer ${accessToken}`
-      }
-      
-      // refresh 요청일 때 X-Refresh-Token 헤더 추가 (모바일만)
-      if (config.url === '/auth/refresh') {
-        const refreshToken = sessionStorage.getItem('refresh_token')
-        if (refreshToken) {
-          config.headers['X-Refresh-Token'] = refreshToken
-        }
+    // sessionStorage에 access_token이 있으면 항상 Authorization 헤더에 설정 (소셜 로그인 지원)
+    const accessToken = sessionStorage.getItem('access_token')
+    if (accessToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`
+      console.log('[AXIOS] Using sessionStorage access_token for Authorization header')
+    } else if (!isMobile()) {
+      // sessionStorage에 토큰이 없고 데스크톱이면 쿠키 사용 (일반 로그인)
+      console.log('[AXIOS] Using cookies for desktop authentication')
+    }
+    
+    // refresh 요청일 때 X-Refresh-Token 헤더 추가
+    if (config.url === '/auth/refresh') {
+      const refreshToken = sessionStorage.getItem('refresh_token')
+      if (refreshToken) {
+        config.headers['X-Refresh-Token'] = refreshToken
+        console.log('[AXIOS] Adding X-Refresh-Token header for refresh request')
       }
     }
     
@@ -70,12 +73,11 @@ axiosInstance.interceptors.response.use(
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url === '/auth/refresh') {
-        // 모바일만 sessionStorage 삭제
-        if (isMobile()) {
-          sessionStorage.removeItem('access_token')
-          sessionStorage.removeItem('refresh_token')
-        }
+        // refresh 실패 시 모든 sessionStorage 토큰 삭제
+        sessionStorage.removeItem('access_token')
+        sessionStorage.removeItem('refresh_token')
         sessionStorage.removeItem('csrf_token')
+        console.log('[AXIOS] Refresh failed - all tokens cleared')
         window.location.href = '/login'
         return Promise.reject(error)
       }
@@ -93,8 +95,16 @@ axiosInstance.interceptors.response.use(
       
       try {
         const refreshResponse = await axiosInstance.post('/auth/refresh')
+        
+        // CSRF 토큰 업데이트
         if (refreshResponse.data.csrf_token) {
           sessionStorage.setItem('csrf_token', refreshResponse.data.csrf_token)
+        }
+        
+        // 새로운 access_token이 있으면 업데이트 (소셜 로그인 지원)
+        if (refreshResponse.data.access_token) {
+          sessionStorage.setItem('access_token', refreshResponse.data.access_token)
+          console.log('[AXIOS] New access_token saved to sessionStorage after refresh')
         }
         
         processQueue(null, refreshResponse.data.csrf_token)
@@ -102,12 +112,11 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null)
         
-        // 모바일만 sessionStorage 삭제
-        if (isMobile()) {
-          sessionStorage.removeItem('access_token')
-          sessionStorage.removeItem('refresh_token')
-        }
+        // 모든 sessionStorage 토큰 삭제
+        sessionStorage.removeItem('access_token')
+        sessionStorage.removeItem('refresh_token')
         sessionStorage.removeItem('csrf_token')
+        console.log('[AXIOS] Authentication failed - all tokens cleared')
         
         window.location.href = '/login'
         return Promise.reject(refreshError)

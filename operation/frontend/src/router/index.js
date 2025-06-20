@@ -10,6 +10,7 @@ import RecommendedProducts from '@/views/RecommendedProducts.vue'
 import MyProducts from '@/views/MyProducts.vue'
 import MyReports from '@/views/MyReports.vue'
 
+
 const routes = [
   {
     path: '/',
@@ -73,10 +74,7 @@ router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
   if (to.meta.requiresAuth) {
-    // CSRF 토큰이 있으면 인증 상태 확인을 기다림
-    const csrfToken = sessionStorage.getItem('csrf_token')
-    
-    if (csrfToken && !userStore.isAuthenticated) {
+    if (!userStore.isAuthenticated) {
       try {
         await userStore.checkAuthStatus()
       } catch (error) {

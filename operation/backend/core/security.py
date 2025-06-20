@@ -89,33 +89,46 @@ def set_token_cookies(response: Response, request: Request, access_token: str, r
     
     print("[COOKIE] HttpOnly cookies set successfully for desktop")
 
-# 쿠키 제거
+# 쿠키 제거 (강화 버전)
 def clear_token_cookies(response: Response):
-    # UTC 시간으로 과거 날짜 생성
-    past_date = datetime.utcnow() - timedelta(days=1)
+    """모든 토큰 쿠키를 완전히 제거"""
+    print("[COOKIE] Starting cookie cleanup...")
     
-    # 쿠키 삭제 시에도 동일한 속성을 지정해야 제대로 삭제됨
-    response.set_cookie(
-        key="access_token",
-        value="",
-        httponly=True,
-        secure=True,
-        samesite="none",  # 설정 시와 동일하게
-        max_age=0,  # 즉시 만료
-        expires=past_date,  # UTC 시간으로 과거 날짜
-        path="/"
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value="",
-        httponly=True,
-        secure=True,
-        samesite="none",
-        max_age=0,
-        expires=past_date,  # UTC 시간으로 과거 날짜
-        path="/"
-    )
-    print("[COOKIE] Cookies cleared successfully")
+    # 여러 방법으로 쿠키 삭제 (브라우저 호환성)
+    cookie_names = ["access_token", "refresh_token"]
+    
+    for cookie_name in cookie_names:
+        # 방법 1: max_age=0으로 즉시 만료
+        response.set_cookie(
+            key=cookie_name,
+            value="",
+            max_age=0,
+            path="/"
+        )
+        
+        # 방법 2: expires를 과거로 설정
+        response.set_cookie(
+            key=cookie_name,
+            value="deleted",
+            expires="Thu, 01 Jan 1970 00:00:00 GMT",
+            path="/"
+        )
+        
+        # 방법 3: 원래 설정과 동일한 속성으로 삭제 (가장 중요!)
+        response.set_cookie(
+            key=cookie_name,
+            value="",
+            httponly=True,
+            secure=True,
+            samesite="none",  # 설정 시와 동일하게!
+            max_age=0,
+            expires="Thu, 01 Jan 1970 00:00:00 GMT",
+            path="/"
+        )
+        
+        print(f"[COOKIE] Cleared {cookie_name} cookie with multiple methods")
+    
+    print("[COOKIE] All cookies cleared successfully")
 
 # 토큰 검증
 def verify_token(token: str, secret_key: str) -> Optional[str]:
@@ -161,8 +174,7 @@ def get_current_user(request: Request) -> dict:
 def is_refresh_token_valid(token: str, user_id: str) -> bool:
     token_collection = get_token_collection()
     
-    print(f"[TOKEN_VALIDATION] Checking token for user {user_id}")
-    print(f"[TOKEN_VALIDATION] Token: {token[:20]}...")
+
     
     token_doc = token_collection.find_one({
         "refresh_token": token,
@@ -201,7 +213,21 @@ def revoke_all_user_tokens(user_id: str) -> int:
     return result.modified_count
 
 
-# CSRF 토큰 검증 (유연한 버전)
+# CSRF 토큰 SessionStorage 관리 함수
+def store_csrf_token_in_session(request: Request, response: Response, csrf_token: str):
+    """데스크톱에서 CSRF 토큰을 JSON 응답으로 제공 (프론트에서 sessionStorage에 저장)"""
+    user_agent = request.headers.get("User-Agent", "")
+    is_mobile = is_mobile_browser(user_agent)
+    
+    if not is_mobile:
+        print(f"[CSRF] Desktop: CSRF token will be sent in JSON for sessionStorage: {csrf_token[:16]}...")
+    else:
+        print(f"[CSRF] Mobile: CSRF token will be sent in JSON response: {csrf_token[:16]}...")
+    
+    return csrf_token  # JSON 응답에 포함될 토큰 반환
+
+
+# CSRF 토큰 검증 (개선된 버전)
 def validate_csrf(request: Request):
     csrf_token_header = request.headers.get("X-CSRF-Token")
     
