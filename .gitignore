@@ -27,7 +27,10 @@ dist/
 .env
 .env.*         # 환경변수 파일들
 
-# Vite
+operation/lambda/keyword/.serverless 
+operation/lambda/keyword/.requirements.zip
+
+# Vite  
 .vite/
 .cache/
 *.log
