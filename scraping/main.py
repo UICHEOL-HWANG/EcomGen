@@ -25,9 +25,7 @@ load_dotenv()
 
 
 def main():
-    category_lst = []
     final_lst = []
-    category_data = {}  # 카테고리별 데이터를 저장할 딕셔너리
 
     # Storage 인스턴스 생성
     storage = Storage(

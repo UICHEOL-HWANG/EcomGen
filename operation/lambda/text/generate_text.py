@@ -133,7 +133,7 @@ def lambda_handler(event, context):
                 "description": description
             }
             
-            # 🐛 디버깅: 콜백 페이로드 키워드 로그
+
             logger.info(f"콜백 페이로드 키워드 - Job ID: {job_id}, Keywords: {callback_payload['keywords']}")
 
             # 콜백 전송 (재시도 로직 추가)

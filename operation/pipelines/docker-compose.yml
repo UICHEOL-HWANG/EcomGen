@@ -1,0 +1,58 @@
+services:
+  perplexity-evaluator:
+    build: .
+    container_name: perplexity-evaluation-service
+    restart: unless-stopped
+    environment:
+      # S3 설정
+      - INSTRUCTION_BUCKETS=${INSTRUCTION_BUCKETS}
+      - ACCESS_KEY=${ACCESS_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - ENDPOINT_URL=${ENDPOINT_URL}
+      
+      # RunPod API 설정
+      - RUNPOD_API_KEY=${RUNPOD_API_KEY}
+      - RUNPOD_ENDPOINT_ID=${RUNPOD_ENDPOINT_ID}
+      
+      # WandB 설정
+      - ENABLE_WANDB=${ENABLE_WANDB:-true}
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - WANDB_PROJECT=${WANDB_PROJECT:-perplexity-evaluation-docker}
+      
+      # 평가 설정
+      - EVAL_SAMPLE_SIZE=${EVAL_SAMPLE_SIZE:-10}
+      
+      # Prefect 설정
+      - PREFECT_API_KEY=${PREFECT_API_KEY}
+    
+    volumes:
+      # 결과 파일 저장용 볼륨
+      - ./results:/app/results
+      # 로그 저장용 볼륨  
+      - ./logs:/app/logs
+    
+    # 메모리 제한 (t2.micro는 1GB RAM)
+    mem_limit: 800m
+    memswap_limit: 800m
+    
+    # CPU 제한
+    cpus: 0.8
+    
+    # 로그 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    
+    # 헬스체크
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  results:
+  logs:

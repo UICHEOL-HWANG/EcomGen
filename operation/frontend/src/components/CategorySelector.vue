@@ -115,7 +115,7 @@ import { CATEGORIES, CATEGORY_GROUPS, POPULAR_CATEGORIES } from '@/constants/pro
 
 export default {
   name: 'CategorySelector',
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'category-selected'],
   props: {
     modelValue: {
       type: String,
@@ -138,6 +138,7 @@ export default {
     const selectCategory = (category) => {
       selectedCategory.value = category
       emit('update:modelValue', category)
+      emit('category-selected', category)
     }
 
     // 선택 취소
