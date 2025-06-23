@@ -12,7 +12,10 @@
           마케팅 설명까지 완성해줍니다.
         </p>
         <div class="flex gap-3 justify-center">
-          <button class="px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition flex-1 max-w-[120px]">
+          <button 
+            @click="handleGetStarted"
+            class="px-6 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition flex-1 max-w-[120px]"
+          >
             시작하기
           </button>
           <router-link 
@@ -298,6 +301,18 @@ const goToReportPage = () => {
 // 로그인 모달 닫기
 const closeLoginModal = () => {
   showLoginModal.value = false
+}
+
+// 시작하기 버튼 클릭 처리
+const handleGetStarted = () => {
+  // 로그인 상태 확인
+  if (userStore.isAuthenticated) {
+    // 로그인된 상태면 AI 생성 페이지로 이동
+    router.push('/generate')
+  } else {
+    // 로그인되지 않은 상태면 로그인 모달 표시
+    showLoginModal.value = true
+  }
 }
 
 // 추천 상품 페이지로 이동

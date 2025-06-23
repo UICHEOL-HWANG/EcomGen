@@ -156,8 +156,8 @@
     </section>
 
     <!-- 필터 모달 -->
-    <div v-if="showFilterModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-sm w-full p-6">
+    <div v-if="showFilterModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 9999;" @click="showFilterModal = false">
+      <div class="bg-white rounded-2xl max-w-sm w-full p-6" @click.stop>
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-bold text-gray-900">필터 설정</h3>
           <button @click="showFilterModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
@@ -214,8 +214,8 @@
     </div>
 
     <!-- 상품 상세 모달 -->
-    <div v-if="selectedProduct" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+    <div v-if="selectedProduct" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style="z-index: 9999;" @click="selectedProduct = null">
+      <div class="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto" @click.stop>
         <!-- 상품 이미지 -->
         <div class="relative">
           <div class="w-full h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center overflow-hidden">
@@ -270,9 +270,7 @@
             <span class="text-2xl font-bold text-blue-600">{{ selectedProduct.price }}</span>
           </div>
           
-          <button class="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-            비슷한 상품 생성하기
-          </button>
+
         </div>
       </div>
     </div>

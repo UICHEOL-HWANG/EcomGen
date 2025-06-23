@@ -58,11 +58,11 @@
 
           <!-- 카테고리 선택기 -->
           <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <CategorySelector v-model="productForm.category" />
+            <CategorySelector v-model="productForm.category" @category-selected="onCategorySelected" />
           </div>
 
           <!-- 가격 -->
-          <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <div ref="priceSection" class="bg-white rounded-xl border border-gray-200 p-6">
             <label class="block text-lg font-semibold text-gray-900 mb-3">예상 가격 *</label>
             <div class="relative">
               <input
@@ -306,6 +306,9 @@ const router = useRouter()
 // 현재 단계
 const currentStep = ref(1)
 
+// 예상가격 섹션 ref
+const priceSection = ref(null)
+
 // 폼 데이터
 const productForm = reactive({
   product_name: '',
@@ -350,6 +353,19 @@ const cleanDescription = computed(() => {
     .replace(/^보고서\s*요약\s*:/, '요약:')
     .trim()
 })
+
+// 카테고리 선택 시 스크롤 처리
+const onCategorySelected = () => {
+  // 카테고리 선택 후 예상가격 섹션으로 부드럽게 스크롤
+  setTimeout(() => {
+    if (priceSection.value) {
+      priceSection.value.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }, 100) // 짧은 딜레이로 DOM 업데이트 대기
+}
 
 // 키워드 추가
 const addKeyword = () => {

@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Results
+results/
+*.json
+
+# Environment files (제외할 것들)
+.env.local
+# .env는 포함됨 (주석 처리)
+
+# Documentation
+README.md
+*.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+deploy.sh
+
+# Other project files (not needed for this container)
+../../../*
+!storage/
+!eval/
+!evaluation_metrics.py
+!requirements.txt
+!.env

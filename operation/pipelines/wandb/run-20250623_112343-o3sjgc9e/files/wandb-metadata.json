@@ -1,0 +1,44 @@
+{
+  "os":  "macOS-15.5-arm64-arm-64bit",
+  "python":  "CPython 3.11.6",
+  "startedAt":  "2025-06-23T02:23:43.262584Z",
+  "program":  "/Users/uicheol_hwang/EcomGen/operation/pipelines/evaluation_metrics.py",
+  "codePath":  "operation/pipelines/evaluation_metrics.py",
+  "git":  {
+    "remote":  "https://github.com/UICHEOL-HWANG/EcomGen.git",
+    "commit":  "eb1f020beb0b8648a0c3346661a5a6d60c0b59c1"
+  },
+  "email":  "icuchoel@gmail.com",
+  "root":  "/Users/uicheol_hwang/EcomGen/operation/pipelines",
+  "host":  "hwang-uicheol-ui-MacBookPro.local",
+  "executable":  "/Users/uicheol_hwang/EcomGen/venv/bin/python",
+  "codePathLocal":  "evaluation_metrics.py",
+  "cpu_count":  8,
+  "cpu_count_logical":  8,
+  "disk":  {
+    "/":  {
+      "total":  "494384795648",
+      "used":  "151968731136"
+    },
+    "/System/Volumes/Data":  {
+      "total":  "494384795648",
+      "used":  "151968731136"
+    }
+  },
+  "memory":  {
+    "total":  "8589934592"
+  },
+  "cpu":  {
+    "count":  8,
+    "countLogical":  8
+  },
+  "apple":  {
+    "name":  "Apple M2",
+    "ecpuCores":  4,
+    "pcpuCores":  4,
+    "gpuCores":  10,
+    "memoryGb":  8,
+    "swapTotalBytes":  "10737418240",
+    "ramTotalBytes":  "8589934592"
+  }
+}

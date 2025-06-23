@@ -1,0 +1,20 @@
+# Core libraries
+prefect
+
+# Data processing
+boto3==1.35.95
+pandas
+numpy
+python-mecab-ko
+
+# Logging and monitoring
+wandb
+
+# HTTP requests
+requests
+
+# JSON/Data handling
+jsonlines
+
+# Date/time utilities
+python-dateutil

@@ -49,16 +49,16 @@ def load_category_object(
 
     df = pd.DataFrame(data)
     logger.info(f"총 {len(df)}개의 레코드가 로드되었습니다.")
-    return df
+    return data
 
-def upload_json_to_s3(
-    data,
+
+def load_single_s3_json(
     bucket_name: str,
     key: str,
     aws_access_key: str,
     aws_secret_key: str,
     endpoint_url: str = None
-) -> None:
+) -> dict:
     s3 = boto3.client(
         's3',
         aws_access_key_id=aws_access_key,
@@ -67,11 +67,11 @@ def upload_json_to_s3(
     )
 
     try:
-        s3.put_object(
-            Bucket=bucket_name,
-            Key=key,
-            Body=json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
-        )
-        logger.info(f"✅ S3 업로드 완료: s3://{bucket_name}/{key}")
+        obj = s3.get_object(Bucket=bucket_name, Key=key)
+        content = obj['Body'].read().decode('utf-8')
+        json_data = json.loads(content)
+        logger.info(f"S3 파일 로드 완료: s3://{bucket_name}/{key}")
+        return json_data
     except Exception as e:
-        logger.error(f"S3 업로드 실패: {e}")
+        logger.error(f"{key} 파일 로드 중 오류 발생: {e}")
+        return {}

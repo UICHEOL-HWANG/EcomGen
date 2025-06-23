@@ -1,0 +1,16 @@
+{
+  "os":  "macOS-15.5-arm64-arm-64bit",
+  "python":  "CPython 3.11.6",
+  "startedAt":  "2025-06-23T02:22:20.264706Z",
+  "program":  "/Users/uicheol_hwang/EcomGen/operation/pipelines/evaluation_metrics.py",
+  "codePath":  "operation/pipelines/evaluation_metrics.py",
+  "git":  {
+    "remote":  "https://github.com/UICHEOL-HWANG/EcomGen.git",
+    "commit":  "eb1f020beb0b8648a0c3346661a5a6d60c0b59c1"
+  },
+  "email":  "icuchoel@gmail.com",
+  "root":  "/Users/uicheol_hwang/EcomGen/operation/pipelines",
+  "host":  "hwang-uicheol-ui-MacBookPro.local",
+  "executable":  "/Users/uicheol_hwang/EcomGen/venv/bin/python",
+  "codePathLocal":  "evaluation_metrics.py"
+}
