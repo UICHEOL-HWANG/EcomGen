@@ -28,9 +28,5 @@ ENV PYTHONUNBUFFERED=1
 # 결과 저장용 디렉토리 생성
 RUN mkdir -p /app/results /app/logs
 
-# 헬스체크
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD python -c "print('healthy')" || exit 1
-
 # 애플리케이션 실행
 CMD ["python", "evaluation_metrics.py"]
