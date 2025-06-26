@@ -82,9 +82,15 @@ https://github.com/user-attachments/assets/084b4f0c-3576-4a07-ac73-9b1de4ace0d1
 > 5. 생성 후 최소 4분, 빠르면 1분이내로 생성가능(서버리스 특성상 콜드스타트 고려)
 > 6. 마이페이지를 통해 내가 만든 상품 및 내가 저장한 리포트 확인 가능
 
+## Service Architecture
 
+![ShopLinog drawio](https://github.com/user-attachments/assets/36240505-544e-4e44-9d92-5dcd49fefb20)
 
-
+> 1. EC2(백엔드) ↔︎ S3 + CDN(정적 웹 호스팅)을 통한 배포
+> 2. 사용자 요청을 통해 키워드 및 메타 데이터(유저 정보등) SQS 전송 → Lambda 트리거 통해 RunPod GPU Server로 전송
+> 3. 요청 받은 내용을 토대로 생성 → 콜백으로 전송 → 콜백을 통해 받은 내용 저장 UI 출력
+> 4. `PreFect`를 통해 모델 성능 평가 주기적으로 실시 (Perplexity, Keyword Ratio["키워드가 얼만큼 반영이 됐는지 확인"]) 격주 1회
+> 5. SQS - Lambda - RunPod 인퍼런스 요청시 내용까지 트래킹 → 실시간 생성 품질 확인가능
 
 ## 🤖 EcomGen 모델
 
@@ -99,8 +105,6 @@ https://github.com/user-attachments/assets/084b4f0c-3576-4a07-ac73-9b1de4ace0d1
 - GPT-nano4.1을 활용한 배치 API로 9,000개 → 20,000개로 데이터 증폭
 - 5가지 입력 요소로 구성: 상품명, 카테고리, 가격, 핵심 키워드, 작성 톤
 - MeCab 형태소 분석기를 통한 자동 키워드 추출 및 재정렬
-
-
 
 ## 👨‍💻 개발자
 
